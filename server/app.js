@@ -23,8 +23,10 @@ const progressRoutes = require("./routes/progress.routes");
 app.use("/api/progress", progressRoutes);
 const deadlineRoutes = require("./routes/deadlines.routes");
 app.use("/api/deadlines", deadlineRoutes);
-
-
+const geminiRoutes = require('./routes/gemini.routes.js');
+app.use('/api/gemini', geminiRoutes);
+const revisionRoutes = require("./routes/revision.routes.js");
+app.use("/api/revisions", revisionRoutes);
 // Health check
 app.get("/", (req, res) => {
   res.send("API is running");
