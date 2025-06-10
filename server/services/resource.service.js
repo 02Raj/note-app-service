@@ -24,9 +24,9 @@ const deleteResource = async (id, userId) => {
   if (!resource) {
     throw new Error('Resource not found or unauthorized');
   }
-  // पहले Cloudinary से फाइल डिलीट करें
+
   await cloudinary.uploader.destroy(resource.cloudinary_id);
-  // फिर डेटाबेस से डॉक्यूमेंट डिलीट करें
+
   return await Resource.findByIdAndDelete(id);
 };
 

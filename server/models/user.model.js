@@ -14,6 +14,11 @@ const userSchema = new mongoose.Schema({
   passwordHash: {
     type: String,
     required: [true, "Password is required"]
+  },
+  role: {
+    type: String,
+    default: 'admin',
+    required: true
   }
 }, { timestamps: true });
 
