@@ -36,6 +36,7 @@ const login = async (req, res) => {
     return successResponse(res, {
   name: result.user.name,
   email: result.user.email,
+  role:result.user.role,
   _id: result.user._id,
   token: result.token
 }, "Login successful", 200);
