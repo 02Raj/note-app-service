@@ -27,6 +27,10 @@ const geminiRoutes = require('./routes/gemini.routes.js');
 app.use('/api/gemini', geminiRoutes);
 const revisionRoutes = require("./routes/revision.routes.js");
 app.use("/api/revisions", revisionRoutes);
+const mockInterviewRoutes = require('./routes/mockInterview.routes.js');
+app.use('/api/mock-interview', mockInterviewRoutes);
+const resourceRoutes = require('./routes/resource.routes.js');
+app.use('/api/resources', resourceRoutes);
 // Health check
 app.get("/", (req, res) => {
   res.send("API is running");

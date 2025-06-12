@@ -33,6 +33,7 @@ note-app-service/
     │   ├── dashboard.controller.js
     │   ├── deadline.controller.js
     │   ├── gemini.controller.js
+    │   ├── mockInterview.controller.js
     │   ├── notes.controller.js
     │   ├── progress.controller.js
     │   ├── resource.controller.js
@@ -45,6 +46,7 @@ note-app-service/
     │   └── error.middlewares.js
     ├── models/
     │   ├── deadline.model.js
+    │   ├── mockInterview.model.js
     │   ├── note.model.js
     │   ├── progress.model.js
     │   ├── resource.model.js
@@ -56,6 +58,7 @@ note-app-service/
     │   ├── dashboard.routes.js
     │   ├── deadlines.routes.js
     │   ├── gemini.routes.js
+    │   ├── mockInterview.routes.js
     │   ├── notes.routes.js
     │   ├── progress.routes.js
     │   ├── resource.routes.js
@@ -66,6 +69,7 @@ note-app-service/
     │   ├── dashboard.service.js
     │   ├── deadline.service.js
     │   ├── gemini.service.js
+    │   ├── mockInterview.service.js
     │   ├── notes.service.js
     │   ├── progress.service.js
     │   ├── resource.service.js
@@ -132,6 +136,15 @@ The application integrates with the Google Gemini API to provide AI-powered feat
 
 This integration allows the application to offer a "preparation analysis" feature, giving users AI-powered feedback on their study habits.
 
+### Mock Interview Feature
+
+The application provides a mock interview feature to help users practice for technical interviews.
+
+- **`mockInterview.routes.js`**: Defines endpoints for starting interviews, submitting answers, and getting feedback.
+- **`mockInterview.controller.js`**: Handles the logic for creating interview sessions, processing user answers, and interacting with the Gemini API for generating questions and feedback.
+- **`mockInterview.service.js`**: Contains the core business logic for the mock interview feature, including communication with the Gemini API to get interview questions and evaluate answers.
+- **`gemini.service.js`**: The Gemini service is also used by the mock interview feature to generate questions and analyze user responses, providing a realistic interview experience.
+
 ## 6. Database Schema
 
 The application uses several Mongoose models to define the database schema. The key models are:
@@ -140,6 +153,7 @@ The application uses several Mongoose models to define the database schema. The 
 - **`Topic`**: Represents a topic created by a user.
 - **`Subtopic`**: Represents a sub-topic within a topic.
 - **`Note`**: Stores the content of a note, linked to a sub-topic.
+- **`MockInterview`**: Stores details about mock interview sessions, including questions, user answers, and AI-generated feedback.
 - **`Progress`**: Tracks the user's progress on different topics.
 - **`Deadline`**: Stores deadlines for topics.
 - **`Resource`**: Stores external resources related to topics.
