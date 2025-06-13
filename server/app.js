@@ -31,6 +31,8 @@ const mockInterviewRoutes = require('./routes/mockInterview.routes.js');
 app.use('/api/mock-interview', mockInterviewRoutes);
 const resourceRoutes = require('./routes/resource.routes.js');
 app.use('/api/resources', resourceRoutes);
+const dashboardRoutes = require('./routes/dashboard.routes'); 
+app.use('/api/dashboard', dashboardRoutes);
 // Health check
 app.get("/", (req, res) => {
   res.send("API is running");

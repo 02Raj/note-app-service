@@ -1,32 +1,33 @@
 const mongoose = require('mongoose');
 
-// Is sub-schema mein badlaav kiya gaya hai
+// This sub-schema defines the structure for detailed feedback entries.
 const feedbackDetailSchema = new mongoose.Schema({
   questionText: String,
   userAnswer: String,
-  strengths: [String], // Ise String se [String] kiya (Array of Strings)
-  areasForImprovement: [String], // Ise bhi String se [String] kiya
+  strengths: [String],
+  areasForImprovement: [String],
   suggestedAnswer: String
 }, {_id: false});
 
+
 const mockInterviewSchema = new mongoose.Schema({
-  userId: { 
-    type: mongoose.Schema.Types.ObjectId, 
-    ref: 'User', 
-    required: true 
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
   },
-  jobProfile: { 
-    type: String, 
-    required: true 
+  jobProfile: {
+    type: String,
+    required: true
   },
-  experience: { 
-    type: String, 
-    required: true 
+  experience: {
+    type: String,
+    required: true
   },
-  status: { 
-    type: String, 
-    enum: ['InProgress', 'Completed'], 
-    default: 'InProgress' 
+  status: {
+    type: String,
+    enum: ['InProgress', 'Completed'],
+    default: 'InProgress'
   },
   questions: [{
     questionText: String,
@@ -34,9 +35,15 @@ const mockInterviewSchema = new mongoose.Schema({
   }],
   feedback: {
     overallSummary: String,
-    detailedFeedback: [feedbackDetailSchema] // Yeh upar wala naya schema use karega
+    detailedFeedback: [feedbackDetailSchema]
+  },
+  // FIX: Added the score field to the schema.
+  score: {
+      type: Number,
+      default: 0
   }
 }, { timestamps: true });
 
 const MockInterview = mongoose.model('MockInterview', mockInterviewSchema);
+
 module.exports = MockInterview;
