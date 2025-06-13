@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   role: {
     type: String,
     enum: ['user', 'Student'], // Changed 'admin' to 'Student'
-    default: 'user',
+    default: 'Student',
     required: true
   },
   // --- NEW FIELDS FOR USER PROFILE ---

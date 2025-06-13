@@ -3,10 +3,9 @@ const { geminiService } = require('./gemini.service.js');
 
 /**
  * Creates a new mock interview session.
- * Generates questions using the AI service and saves them.
  */
 exports.createInterviewSession = async ({ userId, jobProfile, experience, topics }) => {
-  const prompt = `You are an expert technical interviewer. Generate 2 interview questions for a candidate applying for the role of a '${jobProfile}' with '${experience}' of experience. Focus on these topics: '${topics.join(', ')}'. Include a mix of behavioral, technical, and problem-solving questions. Return the response as a JSON array of strings. Example: ["Question 1", "Question 2"]`;
+  const prompt = `You are an expert technical interviewer. Generate 10 interview questions for a candidate applying for the role of a '${jobProfile}' with '${experience}' of experience. Focus on these topics: '${topics.join(', ')}'. Include a mix of behavioral, technical, and problem-solving questions. Return the response as a JSON array of strings. Example: ["Question 1", "Question 2"]`;
 
   const questionsText = await geminiService.generateJson(prompt);
   const questions = questionsText.map(q => ({ questionText: q, userAnswer: '' }));
@@ -28,7 +27,7 @@ exports.createInterviewSession = async ({ userId, jobProfile, experience, topics
 };
 
 /**
- * Submits a user's answer and gets the next question, or marks the interview as complete.
+ * Submits a user's answer and gets the next question.
  */
 exports.submitAnswerAndUpdate = async ({ sessionId, questionNumber, userAnswer }) => {
   const session = await MockInterview.findById(sessionId);
@@ -54,50 +53,66 @@ exports.submitAnswerAndUpdate = async ({ sessionId, questionNumber, userAnswer }
 
 /**
  * Generates and retrieves the feedback report for a completed interview.
- * This function gets a score for each question and calculates the overall average.
  */
 exports.getFeedbackReport = async (sessionId) => {
   const session = await MockInterview.findById(sessionId);
   if (!session) throw new Error("Interview session not found.");
   if (session.status !== 'Completed') throw new Error("Interview is not yet completed.");
   
-  // If feedback and a score already exist, return the saved data to avoid extra API calls.
+  // Return saved data if it already exists
   if (session.feedback && session.feedback.overallSummary && session.score > 0) {
       return session;
   }
 
-  // Clean the user's answers by removing HTML tags before sending to the AI.
-  const transcriptForAI = session.questions.map(q => {
-    const cleanAnswer = q.userAnswer ? q.userAnswer.replace(/<[^>]*>/g, '') : '';
-    return {
-      question: q.questionText,
-      answer: cleanAnswer
-    };
-  });
+  // Clean HTML tags from user answers before sending to the AI
+  const transcriptForAI = session.questions.map(q => ({
+    question: q.questionText,
+    answer: q.userAnswer ? q.userAnswer.replace(/<[^>]*>/g, '') : ''
+  }));
 
   const transcript = JSON.stringify(transcriptForAI);
 
-  // A single, comprehensive prompt to get all feedback and per-question scores in one API call.
-  const feedbackPrompt = `You are an expert interview coach for a '${session.jobProfile}' role. Analyze the following interview transcript. Provide a detailed analysis in a structured JSON format. The JSON should have two keys: 
-  1. 'overallSummary': A string summarizing the candidate's performance.
-  2. 'detailedFeedback': An array of objects. Each object must contain 'questionText', 'userAnswer', 'strengths', 'areasForImprovement', 'suggestedAnswer', and a 'score' out of 10 for that specific question.
-  The transcript is: ${transcript}`;
+  // --- NEW, ROBUST APPROACH ---
+
+  // Prompt 1: Get only the detailed, per-question analysis from the AI.
+  const detailedFeedbackPrompt = `You are an expert interview coach for a '${session.jobProfile}' role. For the provided transcript, return a JSON array where each object corresponds to a question. Each object must contain ONLY these keys: 'strengths' (array of strings), 'areasForImprovement' (array of strings), 'suggestedAnswer' (string), and a 'score' (number out of 10). Do NOT include the original question or user answer in your response. The transcript is: ${transcript}`;
+
+  // Prompt 2: Get only the overall summary.
+  const summaryPrompt = `Based on the following interview transcript, provide a concise overall summary of the candidate's performance. Return a JSON object with a single key "overallSummary". The transcript is: ${transcript}`;
 
   try {
-    // Call the AI service once to get the complete feedback structure.
-    const feedbackData = await geminiService.generateJson(feedbackPrompt);
+    // Run both AI requests in parallel for efficiency
+    const [detailedAnalysis, summaryData] = await Promise.all([
+      geminiService.generateJson(detailedFeedbackPrompt), // Returns an array of analysis objects
+      geminiService.generateJson(summaryPrompt)      // Returns { overallSummary: "..." }
+    ]);
 
-    // Calculate the average score from the scores given for each question.
-    let totalScore = 0;
+    // Combine the original Q&A with the AI's analysis for a complete result
+    const detailedFeedback = session.questions.map((q, index) => {
+      const analysis = detailedAnalysis[index] || {}; // Use a fallback for safety
+      return {
+        questionText: q.questionText,
+        userAnswer: q.userAnswer,
+        strengths: analysis.strengths || [],
+        areasForImprovement: analysis.areasForImprovement || [],
+        suggestedAnswer: analysis.suggestedAnswer || "N/A",
+        score: analysis.score || 0
+      };
+    });
+
+    // Calculate the average score from the detailed feedback
     let averageScore = 0;
-    if (feedbackData.detailedFeedback && feedbackData.detailedFeedback.length > 0) {
-      totalScore = feedbackData.detailedFeedback.reduce((sum, item) => sum + (item.score || 0), 0);
-      averageScore = totalScore / feedbackData.detailedFeedback.length;
+    if (detailedFeedback.length > 0) {
+      const totalScore = detailedFeedback.reduce((sum, item) => sum + item.score, 0);
+      averageScore = totalScore / detailedFeedback.length;
     }
 
-    // Save the feedback and the calculated average score to the database.
-    session.feedback = feedbackData;
-    session.score = averageScore; // This is the overall average score.
+    // Save the complete, assembled data to the session
+    session.feedback = {
+      overallSummary: summaryData.overallSummary || "No summary was provided.",
+      detailedFeedback: detailedFeedback
+    };
+    session.score = averageScore;
     await session.save();
 
     return session;
