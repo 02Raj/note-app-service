@@ -33,6 +33,10 @@ const resourceRoutes = require('./routes/resource.routes.js');
 app.use('/api/resources', resourceRoutes);
 const dashboardRoutes = require('./routes/dashboard.routes'); 
 app.use('/api/dashboard', dashboardRoutes);
+const resumeRoutes = require('./routes/resume.routes.js');
+app.use('/api/resume', resumeRoutes);
+const { errorHandler } = require('./middlewares/error.middlewares.js');
+app.use(errorHandler);
 // Health check
 app.get("/", (req, res) => {
   res.send("API is running");
