@@ -105,6 +105,41 @@ const remove = async (req, res) => {
     return errorResponse(res, error.message);
   }
 };
+const { updateNoteById } = require("../services/notes.service"); // 👈 Import it
+
+/**
+ * Controller to update a note by its ID.
+ */
+const update = async (req, res) => {
+  try {
+    const { id } = req.params;
+    // req.body se values nikalein
+    const { title, content, topicId, subtopicId } = req.body;
+
+    // --- SOLUTION START ---
+    // Yahan check karein ki subtopicId empty to nahi hai.
+    // Agar empty hai, to use null set kar dein, kyunki database null value accept kar lega.
+    const finalSubtopicId = subtopicId === "" ? null : subtopicId;
+    // --- SOLUTION END ---
+
+    // updateNoteById ko cleaned data ke saath call karein
+    const updatedNote = await updateNoteById(id, req.userId, {
+      title,
+      content,
+      topicId,
+      subtopicId: finalSubtopicId, // Yahan updated variable use karein
+    });
+
+    if (!updatedNote) {
+      return errorResponse(res, "Note not found or unauthorized", 404);
+    }
+
+    return successResponse(res, updatedNote, "Note updated successfully");
+  } catch (error) {
+    // Agar ab bhi koi error aata hai to wo yahan dikhega
+    return errorResponse(res, error.message);
+  }
+};
 
 module.exports = {
   create,
@@ -113,4 +148,5 @@ module.exports = {
   getByTopic,
   getBySubtopic,
   remove,
+  update
 };

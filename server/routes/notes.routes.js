@@ -8,9 +8,11 @@ const {
   getByTopic,
   getBySubtopic,
   remove,
+  update
 } = require("../controllers/notes.controller");
 
 router.post("/", authenticate, create);
+router.put("/:id", authenticate, update); 
 router.get("/", authenticate, getAll);
 router.get("/topic/:topicId", authenticate, getByTopic);
 router.get("/subtopic/:subtopicId", authenticate, getBySubtopic);

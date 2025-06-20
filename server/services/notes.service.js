@@ -58,6 +58,20 @@ const getNotesBySubtopic = async (subtopicId, userId) => {
 const deleteNote = async (id, userId) => {
   return await Note.findOneAndDelete({ _id: id, createdBy: userId });
 };
+/**
+ * Updates a note by its ID, only if created by the user.
+ * @param {string} id - The ID of the note.
+ * @param {string} userId - The ID of the user.
+ * @param {object} updateData - The new data for the note.
+ * @returns {Promise<Document|null>} The updated note or null if not found.
+ */
+const updateNoteById = async (id, userId, updateData) => {
+  return await Note.findOneAndUpdate(
+    { _id: id, createdBy: userId },
+    { $set: updateData },
+    { new: true }
+  );
+};
 
 module.exports = {
   createNote,
@@ -66,4 +80,5 @@ module.exports = {
   getNotesByTopic,
   getNotesBySubtopic,
   deleteNote,
+  updateNoteById
 };
