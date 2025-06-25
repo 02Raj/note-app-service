@@ -35,6 +35,8 @@ const dashboardRoutes = require('./routes/dashboard.routes');
 app.use('/api/dashboard', dashboardRoutes);
 const resumeRoutes = require('./routes/resume.routes.js');
 app.use('/api/resume', resumeRoutes);
+const planRoutes = require("./routes/plan.routes");
+app.use("/api/plans", planRoutes);
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check
