@@ -2,18 +2,34 @@
 const Resource = require('../models/resource.model');
 const { cloudinary } = require('../middlewares/cloudinary.config');
 
-const saveResource = async (fileData, userId, topicId, subtopicId) => {
+const saveResource = async (fileData, userId, topicId, subtopicId, externalUrl) => {
+  let url, cloudinary_id, fileType;
+
+  if (fileData) {
+    url = fileData.path;
+    cloudinary_id = fileData.filename;
+    fileType = fileData.mimetype;
+  } else if (externalUrl) {
+    url = externalUrl;
+    cloudinary_id = null;
+    fileType = "link";
+  } else {
+    throw new Error("No file or URL provided");
+  }
+
   const resource = new Resource({
-    name: fileData.originalname,
-    url: fileData.path, 
-    cloudinary_id: fileData.filename,
-    fileType: fileData.mimetype,
+    name: fileData?.originalname || 'External Link',
+    url,
+    cloudinary_id,
+    fileType,
     createdBy: userId,
     topicId: topicId || null,
     subtopicId: subtopicId || null,
   });
+
   return await resource.save();
 };
+
 
 const getResourcesByTopic = async (topicId, userId) => {
   return await Resource.find({ topicId, createdBy: userId });

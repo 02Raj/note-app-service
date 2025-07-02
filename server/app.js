@@ -29,8 +29,8 @@ const revisionRoutes = require("./routes/revision.routes.js");
 app.use("/api/revisions", revisionRoutes);
 const mockInterviewRoutes = require('./routes/mockInterview.routes.js');
 app.use('/api/mock-interview', mockInterviewRoutes);
-const resourceRoutes = require('./routes/resource.routes.js');
-app.use('/api/resources', resourceRoutes);
+const resourceRoutes = require('./routes/resource.routes');
+app.use('/api/resource', resourceRoutes); // very important
 const dashboardRoutes = require('./routes/dashboard.routes'); 
 app.use('/api/dashboard', dashboardRoutes);
 const resumeRoutes = require('./routes/resume.routes.js');

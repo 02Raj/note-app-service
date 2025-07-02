@@ -4,18 +4,27 @@ const { successResponse, errorResponse } = require('../utils/responseHelper');
 // File Upload karne ke liye
 const uploadResource = async (req, res) => {
   try {
-    if (!req.file) {
-      return errorResponse(res, 'No file uploaded.', 400);
+    const { topicId, subtopicId, externalUrl } = req.body;
+
+    if (!req.file && !externalUrl) {
+      return errorResponse(res, 'No file or URL provided.', 400);
     }
-    const { topicId, subtopicId } = req.body;
-    // Assuming your authMiddleware adds user object as req.user
-    const resource = await resourceService.saveResource(req.file, req.user.id, topicId, subtopicId);
+
+    const resource = await resourceService.saveResource(
+      req.file,
+      req.user.id,
+      topicId,
+      subtopicId,
+      externalUrl
+    );
+
     successResponse(res, resource, 'Resource uploaded successfully.', 201);
   } catch (error) {
     console.error("Error in uploadResource controller:", error);
     errorResponse(res, error.message);
   }
 };
+
 
 // Ek topic ke saare resources paane ke liye
 const getResourcesByTopic = async (req, res) => {
