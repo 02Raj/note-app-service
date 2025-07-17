@@ -1,7 +1,7 @@
 const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt =require("jsonwebtoken");
-
+const Session = require("../models/session.model");
 const registerUser = async ({ name, email, password }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -36,7 +36,12 @@ const loginUser = async ({ email, password }) => {
   const token = jwt.sign({ userId: user._id, role: user.role }, process.env.JWT_SECRET, {
     expiresIn: "7d",
   });
-  
+  const newSession = new Session({
+    userId: user._id,
+    startTime: new Date(),
+  });
+  await newSession.save();
+
   // Return user data without role to match the expected response format
   return { 
     user: { 
@@ -45,7 +50,8 @@ const loginUser = async ({ email, password }) => {
       role:user.role,
       _id: user._id
     }, 
-    token 
+    token,
+    sessionId: newSession._id,
   };
 };
 
