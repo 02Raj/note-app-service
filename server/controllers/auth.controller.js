@@ -24,6 +24,7 @@ const register = async (req, res) => {
  * @desc Login user
  * @route POST /api/auth/login
  */
+// controllers/auth.controller.js
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -34,12 +35,13 @@ const login = async (req, res) => {
 
     const result = await loginUser({ email, password });
     return successResponse(res, {
-  name: result.user.name,
-  email: result.user.email,
-  role:result.user.role,
-  _id: result.user._id,
-  token: result.token
-}, "Login successful", 200);
+      name: result.user.name,
+      email: result.user.email,
+      role: result.user.role,
+      _id: result.user._id,
+      token: result.token,
+      sessionId: result.sessionId, // <--- इसे जोड़ें
+    }, "Login successful", 200);
 
   } catch (err) {
     return errorResponse(res, err.message, 401);

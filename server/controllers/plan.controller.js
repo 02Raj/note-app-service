@@ -3,15 +3,18 @@ const { successResponse, errorResponse } = require("../utils/responseHelper");
 
 exports.generateSmartPlan = async (req, res) => {
   try {
-    const { availableHoursPerDay, priorityTopics } = req.body;
     const userId = req.userId;
+    const { availableHoursPerDay, priorityTopics, numberOfDays } = req.body;
 
-    const plan = await planService.createPlanFromAI(userId, availableHoursPerDay, priorityTopics);
-    successResponse(res, plan, "Smart weekly plan generated");
+    const days = numberOfDays || 7; // default to 7 if not provided
+
+    const data = await planService.createPlanFromAI(userId, availableHoursPerDay, priorityTopics, days);
+    successResponse(res, data, "Smart plan generated successfully");
   } catch (err) {
     errorResponse(res, err);
   }
 };
+
 
 exports.markPlanStatus = async (req, res) => {
   try {

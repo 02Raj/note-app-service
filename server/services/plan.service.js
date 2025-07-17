@@ -2,37 +2,38 @@ const Plan = require("../models/plan.model");
 const { geminiService } = require("./gemini.service");
 
 class PlanService {
-  async createPlanFromAI(userId, availableHoursPerDay, priorityTopics) {
-    const prompt = `
-      You are an intelligent learning assistant. Create a 7-day study plan.
+async createPlanFromAI(userId, availableHoursPerDay, priorityTopics, numberOfDays = 7) {
+  const prompt = `
+    You are an intelligent learning assistant. Create a ${numberOfDays}-day study plan.
 
-      - Available hours per day: ${JSON.stringify(availableHoursPerDay)}
-      - Priority Topics: ${priorityTopics.join(", ")}
+    - Available hours per day (array of length ${numberOfDays}): ${JSON.stringify(availableHoursPerDay)}
+    - Priority Topics: ${priorityTopics.join(", ")}
 
-      Return JSON in the format:
-      [
-        {
-          "date": "YYYY-MM-DD",
-          "topic": "Topic name",
-          "subtopic": "Subtopic name",
-          "expectedHours": number
-        },
-        ...
-      ]
-    `;
+    Return JSON array like:
+    [
+      {
+        "date": "YYYY-MM-DD",
+        "topic": "Topic name",
+        "subtopic": "Subtopic name",
+        "expectedHours": number
+      },
+      ...
+    ]
+  `;
 
-    const planArray = await geminiService.generateJson(prompt);
+  const planArray = await geminiService.generateJson(prompt);
 
-    const enrichedPlan = planArray.map(p => ({
-      ...p,
-      userId,
-      status: "pending",
-      date: new Date(p.date)
-    }));
+  const enrichedPlan = planArray.map(p => ({
+    ...p,
+    userId,
+    status: "pending",
+    date: new Date(p.date)
+  }));
 
-    await Plan.insertMany(enrichedPlan);
-    return enrichedPlan;
-  }
+  await Plan.insertMany(enrichedPlan);
+  return enrichedPlan;
+}
+
 
   async markStatus(planId, status) {
     const updated = await Plan.findByIdAndUpdate(planId, { status }, { new: true });

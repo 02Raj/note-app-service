@@ -49,7 +49,33 @@ const loginUser = async ({ email, password }) => {
   };
 };
 
+//
+const endUserSession = async (sessionId) => {
+  if (!sessionId) {
+    throw new Error("Session ID is required to end the session.");
+  }
+
+  const session = await Session.findById(sessionId);
+  if (!session) {
+    throw new Error("Session not found.");
+  }
+
+  // 
+  if (session.endTime) {
+
+    return session; // या बस मौजूदा सेशन लौटा दें
+  }
+
+  session.endTime = new Date();
+  const durationMs = session.endTime.getTime() - session.startTime.getTime();
+  session.duration = Math.round(durationMs / (1000 * 60)); // मिनटों में
+
+  await session.save();
+  return session;
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  endUserSession, // 
 };
