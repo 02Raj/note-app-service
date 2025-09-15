@@ -11,6 +11,7 @@ const authMiddleware = require('../middlewares/auth.middleware');
 // Resume upload aur analyze karne ka route
 router.post(
   '/analyze',
+  
   authMiddleware, // Ab yeh seedhe function ko istemaal karega
   upload.single('resume'),
   resumeController.analyzeResume

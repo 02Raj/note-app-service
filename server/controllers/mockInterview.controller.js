@@ -1,47 +1,48 @@
 const mockInterviewService = require('../services/mockInterview.service.js');
 
-// Naya interview shuru karne ke liye
 exports.startInterview = async (req, res) => {
   try {
-    // userId ko aap protect middleware se req.user.id se lenge
-    // Abhi ke liye hum ise body se le rahe hain
-    const { userId, jobProfile, experience, topics } = req.body;
-
-    if (!userId || !jobProfile || !experience) {
-      return res.status(400).json({ message: "userId, jobProfile, and experience are required." });
+    const { userId, jobProfile, experience, topics, questionCount, timeLimit, customQuestions } = req.body;
+    if (!userId || !jobProfile || !experience || !topics) {
+      return res.status(400).json({ message: "userId, jobProfile, experience, topics required." });
     }
-
-    const interviewSession = await mockInterviewService.createInterviewSession({ userId, jobProfile, experience, topics });
-    res.status(201).json(interviewSession);
+    const session = await mockInterviewService.createInterviewSession({
+      userId,
+      jobProfile,
+      experience,
+      topics,
+      questionCount,
+      timeLimit,
+      customQuestions
+    });
+    res.status(201).json(session);
   } catch (error) {
     console.error("Error starting interview:", error);
-    res.status(500).json({ message: "Failed to start interview session.", error: error.message });
+    res.status(500).json({ message: "Interview session start failed.", error: error.message });
   }
 };
 
-// Jawaab submit karne ke liye
 exports.submitAnswer = async (req, res) => {
   try {
-    const { sessionId, questionNumber, userAnswer } = req.body;
-     if (!sessionId || !questionNumber || !userAnswer) {
-      return res.status(400).json({ message: "sessionId, questionNumber, and userAnswer are required." });
+    const { sessionId, questionNumber, userAnswer, source, elapsedTime, notes } = req.body;
+    if (!sessionId || !questionNumber || userAnswer == undefined) {
+      return res.status(400).json({ message: "sessionId, questionNumber, userAnswer required." });
     }
-
-    const nextQuestion = await mockInterviewService.submitAnswerAndUpdate({ sessionId, questionNumber, userAnswer });
-    
-    if (nextQuestion.interviewComplete) {
-        res.status(200).json({ message: "Interview completed successfully!", interviewComplete: true });
-    } else {
-        res.status(200).json(nextQuestion);
-    }
-
+    const next = await mockInterviewService.submitAnswerAndUpdate({
+      sessionId,
+      questionNumber,
+      userAnswer,
+      source: source || 'manual',
+      elapsedTime,
+      notes
+    });
+    res.status(200).json(next);
   } catch (error) {
     console.error("Error submitting answer:", error);
     res.status(500).json({ message: "Failed to submit answer.", error: error.message });
   }
 };
 
-// Results paane ke liye
 exports.getResults = async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -49,6 +50,36 @@ exports.getResults = async (req, res) => {
     res.status(200).json(results);
   } catch (error) {
     console.error("Error fetching results:", error);
-    res.status(500).json({ message: "Failed to fetch results.", error: error.message });
+    res.status(500).json({ message: "Failed to fetch interview results.", error: error.message });
+  }
+};
+
+exports.pauseInterview = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    const result = await mockInterviewService.pauseInterview({ sessionId });
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to pause interview.", error: error.message });
+  }
+};
+
+exports.resumeInterview = async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    const result = await mockInterviewService.resumeInterview({ sessionId });
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to resume interview.", error: error.message });
+  }
+};
+
+exports.getInterviewHistory = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const history = await mockInterviewService.getUserInterviewHistory(userId);
+    res.status(200).json(history);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch interview history.", error: error.message });
   }
 };

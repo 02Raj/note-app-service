@@ -1,20 +1,40 @@
 const MockInterview = require('../models/mockInterview.model.js');
-const { geminiService } = require('./gemini.service.js');
+const { geminiService } = require('./gemini.service.js'); // you need to provide this or stub it
 
-/**
- * Creates a new mock interview session.
- */
-exports.createInterviewSession = async ({ userId, jobProfile, experience, topics }) => {
-  const prompt = `You are an expert technical interviewer. Generate 10 interview questions for a candidate applying for the role of a '${jobProfile}' with '${experience}' of experience. Focus on these topics: '${topics.join(', ')}'. Include a mix of behavioral, technical, and problem-solving questions. Return the response as a JSON array of strings. Example: ["Question 1", "Question 2"]`;
-
-  const questionsText = await geminiService.generateJson(prompt);
-  const questions = questionsText.map(q => ({ questionText: q, userAnswer: '' }));
+exports.createInterviewSession = async ({
+  userId,
+  jobProfile,
+ experience,
+  topics,
+  questionCount = 10,
+  timeLimit = 0,
+  customQuestions = []
+}) => {
+  let questionsArr = [];
+  if (customQuestions.length > 0) {
+    questionsArr = customQuestions.slice(0, questionCount).map(q => ({
+      questionText: q,
+      answer: { text: '', source: 'manual' }
+    }));
+  } else {
+    const prompt = `You are an expert technical interviewer. Generate ${questionCount} interview questions for a candidate applying for '${jobProfile}' with '${experience}' experience. Focus on: '${topics.join(', ')}'. Include mix of behavioral, technical and problem-solving questions. Return JSON array of strings.`;
+    const questionsText = await geminiService.generateJson(prompt);
+    questionsArr = questionsText.map(q => ({
+      questionText: q,
+      answer: { text: '', source: 'manual' }
+    }));
+  }
 
   const newSession = new MockInterview({
     userId,
     jobProfile,
     experience,
-    questions,
+    topics,
+    questionCount: questionsArr.length,
+    timeLimit,
+    customQuestions,
+    questions: questionsArr,
+    status: 'InProgress',
   });
   await newSession.save();
 
@@ -22,103 +42,132 @@ exports.createInterviewSession = async ({ userId, jobProfile, experience, topics
     sessionId: newSession._id,
     questionNumber: 1,
     questionText: newSession.questions[0].questionText,
-    totalQuestions: newSession.questions.length
+    totalQuestions: newSession.questions.length,
+    timeLimit: newSession.timeLimit,
+    customQuestions: newSession.customQuestions,
+    status: newSession.status
   };
 };
 
-/**
- * Submits a user's answer and gets the next question.
- */
-exports.submitAnswerAndUpdate = async ({ sessionId, questionNumber, userAnswer }) => {
+exports.submitAnswerAndUpdate = async ({
+  sessionId,
+  questionNumber,
+  userAnswer,
+  source = 'manual',
+  elapsedTime = 0,
+  notes = ''
+}) => {
   const session = await MockInterview.findById(sessionId);
   if (!session) throw new Error("Interview session not found.");
 
-  session.questions[questionNumber - 1].userAnswer = userAnswer;
-  await session.save();
+  const qIndex = questionNumber - 1;
+  session.questions[qIndex].answer = { text: userAnswer, source };
+  session.questions[qIndex].notes = notes;
+  session.questions[qIndex].elapsedTime = elapsedTime;
 
+  let interviewComplete = false;
   if (questionNumber >= session.questions.length) {
     session.status = 'Completed';
-    await session.save();
-    return { interviewComplete: true };
-  } else {
-    return {
-      sessionId: session._id,
-      questionNumber: questionNumber + 1,
-      questionText: session.questions[questionNumber].questionText,
-      totalQuestions: session.questions.length,
-      interviewComplete: false
-    };
+    session.finishedAt = new Date();
+    interviewComplete = true;
   }
+  await session.save();
+
+  if (interviewComplete) return { interviewComplete: true };
+  return {
+    sessionId: session._id,
+    questionNumber: questionNumber + 1,
+    questionText: session.questions[questionNumber].questionText,
+    totalQuestions: session.questions.length,
+    status: session.status,
+    interviewComplete: false
+  };
 };
 
-/**
- * Generates and retrieves the feedback report for a completed interview.
- */
 exports.getFeedbackReport = async (sessionId) => {
   const session = await MockInterview.findById(sessionId);
   if (!session) throw new Error("Interview session not found.");
   if (session.status !== 'Completed') throw new Error("Interview is not yet completed.");
-  
-  // Return saved data if it already exists
-  if (session.feedback && session.feedback.overallSummary && session.score > 0) {
-      return session;
-  }
+  if (session.feedback && session.feedback.overallSummary && session.score > 0) return session;
 
-  // Clean HTML tags from user answers before sending to the AI
   const transcriptForAI = session.questions.map(q => ({
     question: q.questionText,
-    answer: q.userAnswer ? q.userAnswer.replace(/<[^>]*>/g, '') : ''
+    answer: (q.answer.source === 'manual') ? (q.answer.text || '') : '',
+    skipEvaluation: q.answer.source === 'ai'
   }));
 
-  const transcript = JSON.stringify(transcriptForAI);
+  const filteredTranscript = JSON.stringify(transcriptForAI);
 
-  // --- NEW, ROBUST APPROACH ---
+  const detailedFeedbackPrompt =
+    `You are an expert interview coach for a '${session.jobProfile}' role.
+    For the provided transcript, return a JSON array for each question.
+    If skipEvaluation is true or answer is empty, set score:0, strengths:[], areasForImprovement:[], suggestedAnswer:"Answer was AI generated or not provided".
+    For normal answers, return strengths, areasForImprovement, suggestedAnswer, score (0-10).
+    Transcript: ${filteredTranscript}`;
 
-  // Prompt 1: Get only the detailed, per-question analysis from the AI.
-  const detailedFeedbackPrompt = `You are an expert interview coach for a '${session.jobProfile}' role. For the provided transcript, return a JSON array where each object corresponds to a question. Each object must contain ONLY these keys: 'strengths' (array of strings), 'areasForImprovement' (array of strings), 'suggestedAnswer' (string), and a 'score' (number out of 10). Do NOT include the original question or user answer in your response. The transcript is: ${transcript}`;
-
-  // Prompt 2: Get only the overall summary.
-  const summaryPrompt = `Based on the following interview transcript, provide a concise overall summary of the candidate's performance. Return a JSON object with a single key "overallSummary". The transcript is: ${transcript}`;
+  const summaryPrompt =
+    `Based on the following interview transcript, provide a concise overall summary of the candidate's performance. Only consider answers which are NOT AI generated or blank. Return: { "overallSummary": "..." } Transcript: ${filteredTranscript}`;
 
   try {
-    // Run both AI requests in parallel for efficiency
     const [detailedAnalysis, summaryData] = await Promise.all([
-      geminiService.generateJson(detailedFeedbackPrompt), // Returns an array of analysis objects
-      geminiService.generateJson(summaryPrompt)      // Returns { overallSummary: "..." }
+      geminiService.generateJson(detailedFeedbackPrompt),
+      geminiService.generateJson(summaryPrompt)
     ]);
 
-    // Combine the original Q&A with the AI's analysis for a complete result
-    const detailedFeedback = session.questions.map((q, index) => {
-      const analysis = detailedAnalysis[index] || {}; // Use a fallback for safety
+    const detailedFeedback = session.questions.map((q, idx) => {
+      const analysis = detailedAnalysis[idx] || {};
       return {
         questionText: q.questionText,
-        userAnswer: q.userAnswer,
+        userAnswer: q.answer.text,
+        answerSource: q.answer.source,
         strengths: analysis.strengths || [],
         areasForImprovement: analysis.areasForImprovement || [],
         suggestedAnswer: analysis.suggestedAnswer || "N/A",
-        score: analysis.score || 0
+        score: analysis.score || 0,
+        notes: q.notes || "",
+        elapsedTime: q.elapsedTime || 0
       };
     });
 
-    // Calculate the average score from the detailed feedback
-    let averageScore = 0;
-    if (detailedFeedback.length > 0) {
-      const totalScore = detailedFeedback.reduce((sum, item) => sum + item.score, 0);
-      averageScore = totalScore / detailedFeedback.length;
-    }
+    let validScores = detailedFeedback.filter(x => x.answerSource === 'manual').map(x => x.score);
+    let averageScore = validScores.length ? validScores.reduce((a, b) => a + b, 0) / validScores.length : 0;
 
-    // Save the complete, assembled data to the session
     session.feedback = {
-      overallSummary: summaryData.overallSummary || "No summary was provided.",
-      detailedFeedback: detailedFeedback
+      overallSummary: summaryData.overallSummary || "No summary.",
+      detailedFeedback
     };
     session.score = averageScore;
     await session.save();
 
     return session;
-
   } catch (error) {
     console.error("Error during feedback and score generation:", error);
-    throw new Error("Failed to generate feedback from the AI service.");
+    throw new Error("Failed to generate feedback from AI service.");
   }
+};
+
+exports.pauseInterview = async ({ sessionId }) => {
+  const session = await MockInterview.findById(sessionId);
+  if (!session) throw new Error("Interview session not found.");
+  if (session.status !== 'InProgress') throw new Error("Can only pause InProgress interview.");
+
+  session.status = 'Paused';
+  session.pausedAt = new Date();
+  await session.save();
+  return { sessionId, status: 'Paused', pausedAt: session.pausedAt };
+};
+
+exports.resumeInterview = async ({ sessionId }) => {
+  const session = await MockInterview.findById(sessionId);
+  if (!session) throw new Error("Interview session not found.");
+  if (session.status !== 'Paused') throw new Error("Can only resume Paused interview.");
+
+  session.status = 'InProgress';
+  session.pausedAt = undefined;
+  await session.save();
+  return { sessionId, status: 'InProgress' };
+};
+
+exports.getUserInterviewHistory = async (userId) => {
+  return await MockInterview.find({ userId }).sort({ createdAt: -1 });
 };
