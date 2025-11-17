@@ -1,5 +1,5 @@
 const Note = require("../models/note.model");
-
+const DeletedNote = require("../models/deletedNote.model");
 /**
  * Creates a new note in the database.
  * @param {object} data - The note data.
@@ -59,15 +59,15 @@ const deleteNote = async (id, userId) => {
   const note = await Note.findOne({ _id: id, createdBy: userId });
   if (!note) return null;
 
-  // deleted data store
+  // Move note to DeletedNotes archive
   await DeletedNote.create({
     originalId: note._id,
     data: note.toObject(),
     deletedBy: userId,
-    canRestore: true, // default restore allowed
+    canRestore: true,
   });
 
-  // actual delete
+  // Then delete from original notes
   return await Note.findOneAndDelete({ _id: id, createdBy: userId });
 };
 

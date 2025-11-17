@@ -94,17 +94,19 @@ const getBySubtopic = async (req, res) => {
 const remove = async (req, res) => {
   try {
     const { id } = req.params;
+
     const deleted = await deleteNote(id, req.userId);
 
     if (!deleted) {
       return errorResponse(res, "Note not found or unauthorized", 404);
     }
-    
+
     return successResponse(res, {}, "Note deleted successfully");
   } catch (error) {
     return errorResponse(res, error.message);
   }
 };
+
 const { updateNoteById } = require("../services/notes.service"); // 👈 Import it
 
 /**
