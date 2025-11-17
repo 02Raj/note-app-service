@@ -56,8 +56,21 @@ const getNotesBySubtopic = async (subtopicId, userId) => {
  * @returns {Promise<Document|null>} The deleted document or null if not found.
  */
 const deleteNote = async (id, userId) => {
+  const note = await Note.findOne({ _id: id, createdBy: userId });
+  if (!note) return null;
+
+  // deleted data store
+  await DeletedNote.create({
+    originalId: note._id,
+    data: note.toObject(),
+    deletedBy: userId,
+    canRestore: true, // default restore allowed
+  });
+
+  // actual delete
   return await Note.findOneAndDelete({ _id: id, createdBy: userId });
 };
+
 /**
  * Updates a note by its ID, only if created by the user.
  * @param {string} id - The ID of the note.

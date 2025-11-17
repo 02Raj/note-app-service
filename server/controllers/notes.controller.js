@@ -141,6 +141,25 @@ const update = async (req, res) => {
   }
 };
 
+const restoreDeletedNote = async (id, userId) => {
+  // NOTE: canRestore flag check
+  const deleted = await DeletedNote.findOne({
+    originalId: id,
+    deletedBy: userId,
+    canRestore: true
+  });
+
+  if (!deleted) return null;
+
+  // restore to original notes table
+  await Note.create(deleted.data);
+
+  // delete from deleted logs
+  await DeletedNote.deleteOne({ originalId: id });
+
+  return deleted.data;
+};
+
 module.exports = {
   create,
   getAll,
@@ -148,5 +167,6 @@ module.exports = {
   getByTopic,
   getBySubtopic,
   remove,
-  update
+  update,
+  restoreDeletedNote
 };
