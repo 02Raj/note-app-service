@@ -8,7 +8,8 @@ const {
   getByTopic,
   getBySubtopic,
   remove,
-  update
+  update,
+  explainNote 
 } = require("../controllers/notes.controller");
 
 router.post("/", authenticate, create);
@@ -18,4 +19,9 @@ router.get("/topic/:topicId", authenticate, getByTopic);
 router.get("/subtopic/:subtopicId", authenticate, getBySubtopic);
 router.delete("/:id", authenticate, remove);
 
+/**
+ * NEW ROUTE
+ * Note ko AI se explain karne ke liye
+ */
+router.post("/note-explain", authenticate, explainNote);
 module.exports = router;

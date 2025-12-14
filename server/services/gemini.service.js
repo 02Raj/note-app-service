@@ -106,11 +106,56 @@ class GeminiService {
   }
 }
 
+
+
 // Create a single, reusable instance of the service
 const geminiService = new GeminiService();
+
+/**
+ * NEW FUNCTION
+ * Note ko English ya Hinglish mein explain karega
+ */
+const explainNoteWithGemini = async (noteContent, lang) => {
+  const model = genAI.getGenerativeModel({
+    model: "gemini-1.5-flash-latest",
+  });
+
+  let languagePrompt = "";
+
+  if (lang === "hinglish") {
+    languagePrompt = `
+Explain in Hinglish (mix of Hindi + English).
+Use simple spoken language.
+Teach like a mentor explaining verbally.
+Avoid pure Hindi.
+`;
+  } else {
+    languagePrompt = `
+Explain in simple spoken English.
+Make it interview-friendly.
+Explain step by step like a teacher.
+`;
+  }
+
+  const prompt = `
+You are a senior software mentor.
+
+${languagePrompt}
+
+Explain the following notes so that a student can understand just by listening:
+
+${noteContent}
+`;
+
+  const result = await model.generateContent(prompt);
+
+  return result.response.text();
+};
+
 
 // Export all functionalities
 module.exports = {
   analyzePreparation,
   geminiService,
+  explainNoteWithGemini
 };

@@ -6,6 +6,7 @@ const {
   getNotesBySubtopic,
   deleteNote,
 } = require("../services/notes.service");
+const { explainNoteWithGemini } = require("../services/gemini.service");
 
 const { successResponse, errorResponse } = require("../utils/responseHelper");
 
@@ -162,6 +163,33 @@ const restoreDeletedNote = async (id, userId) => {
   return deleted.data;
 };
 
+/**
+ * NEW CONTROLLER
+ * AI se note explain karwata hai
+ */
+const explainNote = async (req, res) => {
+  try {
+    const { content, lang } = req.body;
+
+    if (!content) {
+      return errorResponse(res, "Note content is required", 400);
+    }
+
+    const explanation = await explainNoteWithGemini(
+      content,
+      lang || "english"
+    );
+
+    return successResponse(
+      res,
+      explanation,
+      "AI explanation generated successfully"
+    );
+  } catch (error) {
+    return errorResponse(res, error.message);
+  }
+};
+
 module.exports = {
   create,
   getAll,
@@ -170,5 +198,6 @@ module.exports = {
   getBySubtopic,
   remove,
   update,
-  restoreDeletedNote
+  restoreDeletedNote,
+  explainNote
 };
