@@ -37,6 +37,7 @@ const resumeRoutes = require('./routes/resume.routes.js');
 app.use('/api/resume', resumeRoutes);
 const planRoutes = require("./routes/plan.routes");
 app.use("/api/plans", planRoutes);
+app.use("/api/contact", require("./routes/contact.routes"));
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check
