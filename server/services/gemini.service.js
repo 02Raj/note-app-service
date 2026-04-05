@@ -7,9 +7,9 @@ const genAI = new GoogleGenerativeAI(geminiApiKey);
 // Model configured to return JSON output
 const jsonModel = genAI.getGenerativeModel({
   model: "gemini-1.5-flash",
-  generationConfig: {
-    responseMimeType: "application/json",
-  },
+  // generationConfig: {
+  //   responseMimeType: "application/json",
+  // },
 });
 
 // Model configured to return normal text output
@@ -117,7 +117,7 @@ const geminiService = new GeminiService();
  */
 const explainNoteWithGemini = async (noteContent, lang) => {
   const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash-latest",
+    model: "gemini-2.5-flash"
   });
 
   let languagePrompt = "";
@@ -148,7 +148,6 @@ ${noteContent}
 `;
 
   const result = await model.generateContent(prompt);
-
   return result.response.text();
 };
 

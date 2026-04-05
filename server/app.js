@@ -37,8 +37,12 @@ const resumeRoutes = require('./routes/resume.routes.js');
 app.use('/api/resume', resumeRoutes);
 const planRoutes = require("./routes/plan.routes");
 app.use("/api/plans", planRoutes);
+app.use("/api/hr", require("./routes/hr.routes"));
+app.use("/api/interactions", require("./routes/interaction.routes"));
+
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
+
 // Health check
 app.get("/", (req, res) => {
   res.send("API is running");
