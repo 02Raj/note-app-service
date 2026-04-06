@@ -16,9 +16,9 @@ const sessionSchema = new mongoose.Schema({
   duration: {
     type: Number,
   },
-  lastActivityTime: { // <-- इसे जोड़ें
+  lastActivityTime: { 
     type: Date,
-    default: Date.now, // डिफ़ॉल्ट रूप से सेशन स्टार्ट टाइम पर सेट होगा
+    default: Date.now,
   }
 }, { timestamps: true });
 

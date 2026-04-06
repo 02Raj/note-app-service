@@ -11,6 +11,7 @@ const noteSchema = new mongoose.Schema({
   lastRevisedAt: { type: Date },
   revisionDueDate: { type: Date, default: Date.now }, 
   revisionStage: { type: Number, default: 0 },
+  skippedCount: { type: Number, default: 0 },
 });
 
 module.exports = mongoose.model("Note", noteSchema);
