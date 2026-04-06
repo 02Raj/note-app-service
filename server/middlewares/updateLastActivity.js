@@ -10,7 +10,7 @@ const updateLastActivity = async (req, res, next) => {
 
   // अभी के लिए, मान लेते हैं कि sessionId req.body या req.headers में आ रहा है
   // या अगर आप JWT payload में sessionId को शामिल कर रहे हैं और उसे डिकोड कर रहे हैं:
-  const userId = req.user._id; // यह JWT token से आना चाहिए
+  const userId = req.user.id; // यह JWT token से आना चाहिए
   const sessionId = req.headers['x-session-id'] || req.body.sessionId; // उदाहरण के लिए, क्लाइंट इसे भेजेगा
 
   if (userId && sessionId) {
