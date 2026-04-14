@@ -6,7 +6,7 @@ const genAI = new GoogleGenerativeAI(geminiApiKey);
 
 // Model configured to return JSON output
 const jsonModel = genAI.getGenerativeModel({
-  model: "gemini-1.5-flash",
+   model: "gemini-2.5-flash-preview-04-17",
   generationConfig: {
     responseMimeType: "application/json",
   },
