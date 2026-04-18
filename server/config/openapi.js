@@ -36,6 +36,7 @@ const openApiSpec = {
     { name: "Daily Routine" },
     { name: "Expenses" },
     { name: "Food Log" },
+    { name: "DSA" },
   ],
   components: {
     securitySchemes: {
@@ -224,6 +225,78 @@ const openApiSpec = {
         properties: {
           sessionId: { type: "string", example: "67f0b07ef80a62f38de3f8ff" },
           answer: { type: "string", example: "I would use indexing to optimize queries." },
+        },
+      },
+      DsaProblemCreateRequest: {
+        type: "object",
+        required: ["title", "leetcodeUrl", "pattern", "confidence"],
+        properties: {
+          title: { type: "string", example: "Three Sum" },
+          leetcodeUrl: { type: "string", example: "https://leetcode.com/problems/3sum/" },
+          difficulty: { type: "string", enum: ["Easy", "Medium", "Hard"], example: "Medium" },
+          pattern: { type: "string", example: "Two Pointer" },
+          subPattern: { type: "string", example: "Sorting" },
+          triggerSentence: {
+            type: "string",
+            example: "Main isko Two Pointer isliye pehchanunga kyunki sorted array me pair sum target se compare hota hai.",
+          },
+          bruteForce: { type: "string", example: "Har triplet ko check karna O(n^3) me." },
+          whyOptimal: { type: "string", example: "Sort + two pointer se O(n^2) ho jata hai." },
+          weakPoint: { type: "string", example: "Duplicate handling miss ki to wrong output aayega." },
+          revisionNote: { type: "string", example: "Array sort karo. i fix karo. left/right se sum compare karo. Duplicates skip karo." },
+          commonMistakes: {
+            type: "array",
+            items: { type: "string" },
+            example: ["Duplicate skip na karna", "i pointer boundaries galat"],
+          },
+          code: { type: "string", example: "function threeSum(nums) { /* ... */ }" },
+          language: { type: "string", example: "JavaScript" },
+          timeComplexity: { type: "string", example: "O(n^2)" },
+          spaceComplexity: { type: "string", example: "O(1)" },
+          confidence: { type: "integer", minimum: 1, maximum: 4, example: 3 },
+          solvedAt: { type: "string", format: "date-time", example: "2026-04-18T10:00:00.000Z" },
+          status: { type: "string", enum: ["active", "mastered", "archived"], example: "active" },
+          similarProblems: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                title: { type: "string", example: "3Sum Closest" },
+                url: { type: "string", example: "https://leetcode.com/problems/3sum-closest/" },
+                difficulty: { type: "string", enum: ["Easy", "Medium", "Hard"], example: "Medium" },
+                whySimilar: { type: "string", example: "Sorting + two pointer trigger same hai." },
+              },
+            },
+          },
+        },
+      },
+      DsaProblemUpdateRequest: {
+        type: "object",
+        properties: {
+          title: { type: "string", example: "Three Sum - Revised" },
+          pattern: { type: "string", example: "Two Pointer" },
+          confidence: { type: "integer", minimum: 1, maximum: 4, example: 4 },
+          status: { type: "string", enum: ["active", "mastered", "archived"], example: "active" },
+          revisionNote: { type: "string", example: "Loop i and use left/right on sorted array." },
+        },
+      },
+      DsaReviseRequest: {
+        type: "object",
+        required: ["confidence"],
+        properties: {
+          confidence: { type: "integer", minimum: 1, maximum: 4, example: 3 },
+        },
+      },
+      DsaAnalyzeRequest: {
+        type: "object",
+        required: ["problemName", "leetcodeUrl", "code"],
+        properties: {
+          problemName: { type: "string", example: "Three Sum" },
+          leetcodeUrl: { type: "string", example: "https://leetcode.com/problems/3sum/" },
+          language: { type: "string", example: "JavaScript" },
+          code: { type: "string", example: "function threeSum(nums) { /* ... */ }" },
+          felt: { type: "string", example: "Struggled" },
+          confidence: { type: "integer", minimum: 1, maximum: 4, example: 3 },
         },
       },
     },
@@ -994,6 +1067,140 @@ const openApiSpec = {
           { name: "date", in: "path", required: true, schema: { type: "string", format: "date" } },
         ],
         responses: { 200: { description: "Insight generated" } },
+      },
+    },
+
+    "/api/dsa/problems": {
+      post: {
+        tags: ["DSA"],
+        summary: "Create DSA problem log",
+        security: [{ bearerAuth: [] }],
+        operationId: "createDsaProblem",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/DsaProblemCreateRequest" },
+            },
+          },
+        },
+        responses: { 201: { description: "DSA problem created" }, 400: { description: "Validation error" } },
+      },
+      get: {
+        tags: ["DSA"],
+        summary: "List DSA problems",
+        security: [{ bearerAuth: [] }],
+        operationId: "listDsaProblems",
+        parameters: [
+          { name: "pattern", in: "query", required: false, schema: { type: "string" } },
+          { name: "status", in: "query", required: false, schema: { type: "string", enum: ["active", "mastered", "archived"] } },
+          { name: "difficulty", in: "query", required: false, schema: { type: "string", enum: ["Easy", "Medium", "Hard"] } },
+        ],
+        responses: { 200: { description: "DSA problems fetched" } },
+      },
+    },
+    "/api/dsa/problems/{id}": {
+      get: {
+        tags: ["DSA"],
+        summary: "Get DSA problem by id",
+        security: [{ bearerAuth: [] }],
+        operationId: "getDsaProblemById",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: { 200: { description: "DSA problem fetched" }, 404: { description: "Not found" } },
+      },
+      put: {
+        tags: ["DSA"],
+        summary: "Update DSA problem",
+        security: [{ bearerAuth: [] }],
+        operationId: "updateDsaProblem",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/DsaProblemUpdateRequest" },
+            },
+          },
+        },
+        responses: { 200: { description: "DSA problem updated" }, 404: { description: "Not found" } },
+      },
+      delete: {
+        tags: ["DSA"],
+        summary: "Delete DSA problem",
+        security: [{ bearerAuth: [] }],
+        operationId: "deleteDsaProblem",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: { 200: { description: "DSA problem deleted" }, 404: { description: "Not found" } },
+      },
+    },
+    "/api/dsa/problems/{id}/revise": {
+      post: {
+        tags: ["DSA"],
+        summary: "Mark DSA revision and reschedule",
+        security: [{ bearerAuth: [] }],
+        operationId: "reviseDsaProblem",
+        parameters: [
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/DsaReviseRequest" },
+            },
+          },
+        },
+        responses: { 200: { description: "Revision updated" }, 400: { description: "Invalid confidence" } },
+      },
+    },
+    "/api/dsa/due-today": {
+      get: {
+        tags: ["DSA"],
+        summary: "Get DSA problems due today",
+        security: [{ bearerAuth: [] }],
+        operationId: "getDueDsaToday",
+        responses: { 200: { description: "Due revisions fetched" } },
+      },
+    },
+    "/api/dsa/patterns": {
+      get: {
+        tags: ["DSA"],
+        summary: "Get DSA pattern mastery stats",
+        security: [{ bearerAuth: [] }],
+        operationId: "getDsaPatternStats",
+        responses: { 200: { description: "Pattern stats fetched" } },
+      },
+    },
+    "/api/dsa/dashboard": {
+      get: {
+        tags: ["DSA"],
+        summary: "Get DSA dashboard",
+        security: [{ bearerAuth: [] }],
+        operationId: "getDsaDashboard",
+        responses: { 200: { description: "Dashboard fetched" } },
+      },
+    },
+    "/api/dsa/analyze": {
+      post: {
+        tags: ["DSA"],
+        summary: "Analyze DSA solution with AI",
+        security: [{ bearerAuth: [] }],
+        operationId: "analyzeDsaSolution",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/DsaAnalyzeRequest" },
+            },
+          },
+        },
+        responses: { 200: { description: "Analysis generated" }, 400: { description: "Invalid input" } },
       },
     },
 

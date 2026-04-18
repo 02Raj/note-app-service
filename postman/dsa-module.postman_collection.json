@@ -1,0 +1,135 @@
+{
+  "info": {
+    "_postman_id": "a91f3cf8-29ae-4706-bfcb-3d2f83ac8d73",
+    "name": "Note App Service - DSA Module",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Ready-to-test Postman collection for /api/dsa endpoints. Set token after login."
+  },
+  "item": [
+    {
+      "name": "Create DSA Problem",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Three Sum\",\n  \"leetcodeUrl\": \"https://leetcode.com/problems/3sum/\",\n  \"difficulty\": \"Medium\",\n  \"pattern\": \"Two Pointer\",\n  \"subPattern\": \"Sorting\",\n  \"triggerSentence\": \"Main isko Two Pointer isliye pehchanunga kyunki sorted array me left-right adjust karke target sum banate hain.\",\n  \"bruteForce\": \"Har triplet check karna O(n^3).\",\n  \"whyOptimal\": \"Sort + fixed i + two pointer se O(n^2).\",\n  \"weakPoint\": \"Duplicates skip na kiye to repeated triplets aa jayenge.\",\n  \"revisionNote\": \"Sort karo. i fix karo. left/right se sum compare karo. duplicates skip karo.\",\n  \"commonMistakes\": [\"Duplicate handling miss\", \"left/right movement galat\", \"same index reuse\"],\n  \"code\": \"function threeSum(nums) { /* paste your code */ }\",\n  \"language\": \"JavaScript\",\n  \"timeComplexity\": \"O(n^2)\",\n  \"spaceComplexity\": \"O(1)\",\n  \"confidence\": 3,\n  \"similarProblems\": [\n    {\"title\": \"3Sum Closest\", \"url\": \"https://leetcode.com/problems/3sum-closest/\", \"difficulty\": \"Medium\", \"whySimilar\": \"Sort + two pointer\"},\n    {\"title\": \"4Sum\", \"url\": \"https://leetcode.com/problems/4sum/\", \"difficulty\": \"Medium\", \"whySimilar\": \"k-sum with sorting and pointers\"},\n    {\"title\": \"Two Sum II\", \"url\": \"https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/\", \"difficulty\": \"Medium\", \"whySimilar\": \"sorted array two pointer trigger\"}\n  ]\n}"
+        },
+        "url": "{{baseUrl}}/api/dsa/problems"
+      }
+    },
+    {
+      "name": "List DSA Problems",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/dsa/problems?pattern=Two%20Pointer&status=active"
+      }
+    },
+    {
+      "name": "Get DSA Problem By Id",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/dsa/problems/{{problemId}}"
+      }
+    },
+    {
+      "name": "Update DSA Problem",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"revisionNote\": \"Sorted array me i fix and left/right move based on sum. duplicates skip compulsory.\",\n  \"confidence\": 4\n}"
+        },
+        "url": "{{baseUrl}}/api/dsa/problems/{{problemId}}"
+      }
+    },
+    {
+      "name": "Delete DSA Problem",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/dsa/problems/{{problemId}}"
+      }
+    },
+    {
+      "name": "Revise DSA Problem",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"confidence\": 3\n}"
+        },
+        "url": "{{baseUrl}}/api/dsa/problems/{{problemId}}/revise"
+      }
+    },
+    {
+      "name": "Due Today",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/dsa/due-today"
+      }
+    },
+    {
+      "name": "Pattern Stats",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/dsa/patterns"
+      }
+    },
+    {
+      "name": "DSA Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "url": "{{baseUrl}}/api/dsa/dashboard"
+      }
+    },
+    {
+      "name": "Analyze DSA Solution (AI)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{token}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"problemName\": \"Three Sum\",\n  \"leetcodeUrl\": \"https://leetcode.com/problems/3sum/\",\n  \"language\": \"JavaScript\",\n  \"code\": \"function threeSum(nums) { /* paste your code */ }\",\n  \"felt\": \"Struggled\",\n  \"confidence\": 3\n}"
+        },
+        "url": "{{baseUrl}}/api/dsa/analyze"
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000" },
+    { "key": "token", "value": "" },
+    { "key": "problemId", "value": "" }
+  ]
+}
