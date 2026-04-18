@@ -40,6 +40,10 @@ app.use("/api/plans", planRoutes);
 app.use("/api/contact", require("./routes/contact.routes"));
 const dailyRoutineRoutes = require("./routes/dailyRoutine.routes");
 app.use("/api/routine", dailyRoutineRoutes);
+const expenseRoutes = require("./routes/expenses.routes");
+app.use("/api/expenses", expenseRoutes);
+const foodLogRoutes = require("./routes/foodLog.routes");
+app.use("/api/food-log", foodLogRoutes);
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check
