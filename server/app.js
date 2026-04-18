@@ -2,6 +2,11 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./utils/db");
+const {
+  swaggerUi,
+  openApiSpec,
+  swaggerOptions,
+} = require("./config/openapi");
 
 dotenv.config();
 
@@ -10,6 +15,12 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.get("/api-docs.json", (req, res) => {
+  res.json(openApiSpec);
+});
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec, swaggerOptions));
 
 // Routes
 app.use("/api/auth", require("./routes/auth.routes"));
