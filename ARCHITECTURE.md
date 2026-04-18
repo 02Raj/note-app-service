@@ -1,176 +1,286 @@
 # Note App Service Architecture
 
-This document outlines the architecture of the Note App service, a Node.js application designed to provide backend services for a note-taking application.
+This document describes the current architecture of the Note App backend as implemented in the codebase.
 
 ## 1. Technology Stack
 
-The application is built with the following technologies:
+- **Runtime:** Node.js
+- **Framework:** Express.js (v5)
+- **Database:** MongoDB with Mongoose
+- **Authentication:** JWT (`jsonwebtoken`)
+- **File Upload and Storage:** Multer + Cloudinary (`multer-storage-cloudinary`, `cloudinary`)
+- **AI Integration:** Google Gemini via `@google/generative-ai` and `@google/genai`
+- **Document Parsing:** `pdf-parse` (PDF), `mammoth` (DOCX)
+- **HTTP Client:** `axios`
+- **Environment Variables:** `dotenv`
+- **Dev Tooling:** `nodemon`
 
-- **Backend Framework:** [Express.js](https://expressjs.com/)
-- **Database:** [MongoDB](https://www.mongodb.com/) with [Mongoose](https://mongoosejs.com/) ODM
-- **Authentication:** [JSON Web Tokens (JWT)](https://jwt.io/)
-- **File Storage:** [Cloudinary](https://cloudinary.com/) for media uploads
-- **AI Integration:** [Google Gemini API](https://ai.google.dev/)
-- **Environment Management:** [dotenv](https://www.npmjs.com/package/dotenv)
-- **Real-time Development:** [nodemon](https://nodemon.io/)
+## 2. Current Project Structure
 
-## 2. Project Structure
-
-The project follows a standard feature-based structure, which promotes separation of concerns and modularity.
-
-```
+```text
 note-app-service/
-├── .gitignore
-├── package-lock.json
+├── ARCHITECTURE.md
 ├── package.json
 └── server/
-    ├── app.js
-    ├── server.js
-    ├── config/
-    │   └── env.js
-    ├── controllers/
-    │   ├── auth.controller.js
-    │   ├── dashboard.controller.js
-    │   ├── deadline.controller.js
-    │   ├── gemini.controller.js
-    │   ├── mockInterview.controller.js
-    │   ├── notes.controller.js
-    │   ├── progress.controller.js
-    │   ├── resource.controller.js
-    │   ├── revision.controller.js
-    │   ├── subtopics.controller.js
-    │   └── topics.controller.js
-    ├── middlewares/
-    │   ├── auth.middleware.js
-    │   ├── cloudinary.config.js
-    │   └── error.middlewares.js
-    ├── models/
-    │   ├── deadline.model.js
-    │   ├── mockInterview.model.js
-    │   ├── note.model.js
-    │   ├── progress.model.js
-    │   ├── resource.model.js
-    │   ├── subtopic.model.js
-    │   ├── topic.model.js
-    │   └── user.model.js
-    ├── routes/
-    │   ├── auth.routes.js
-    │   ├── dashboard.routes.js
-    │   ├── deadlines.routes.js
-    │   ├── gemini.routes.js
-    │   ├── mockInterview.routes.js
-    │   ├── notes.routes.js
-    │   ├── progress.routes.js
-    │   ├── resource.routes.js
-    │   ├── revision.routes.js
-    │   ├── subtopics.routes.js
-    │   └── topics.routes.js
-    ├── services/
-    │   ├── dashboard.service.js
-    │   ├── deadline.service.js
-    │   ├── gemini.service.js
-    │   ├── mockInterview.service.js
-    │   ├── notes.service.js
-    │   ├── progress.service.js
-    │   ├── resource.service.js
-    │   ├── revision.service.js
-    │   ├── subtopics.service.js
-    │   ├── topic.service.js
-    │   └── user.service.js
-    └── utils/
-        ├── db.js
-        └── responseHelper.js
+        ├── app.js
+        ├── server.js
+        ├── config/
+        │   └── env.js
+        ├── controllers/
+        │   ├── auth.controller.js
+        │   ├── contact.controller.js
+        │   ├── daily-routine-dashboard.controller.js
+        │   ├── dailyRoutine.controller.js
+        │   ├── dashboard.controller.js
+        │   ├── deadline.controller.js
+        │   ├── gemini.controller.js
+        │   ├── mockInterview.controller.js
+        │   ├── notes.controller.js
+        │   ├── plan.controller.js
+        │   ├── progress.controller.js
+        │   ├── resource.controller.js
+        │   ├── resume.controller.js
+        │   ├── revision.controller.js
+        │   ├── subtopics.controller.js
+        │   └── topics.controller.js
+        ├── middlewares/
+        │   ├── auth.middleware.js
+        │   ├── cloudinary.config.js
+        │   ├── error.middlewares.js
+        │   └── updateLastActivity.js
+        ├── models/
+        │   ├── contact.model.js
+        │   ├── dailytask.model.js
+        │   ├── deadline.model.js
+        │   ├── deletedNote.model.js
+        │   ├── mockInterview.model.js
+        │   ├── note.model.js
+        │   ├── plan.model.js
+        │   ├── progress.model.js
+        │   ├── resource.model.js
+        │   ├── session.model.js
+        │   ├── subtopic.model.js
+        │   ├── topic.model.js
+        │   └── user.model.js
+        ├── routes/
+        │   ├── auth.routes.js
+        │   ├── contact.routes.js
+        │   ├── dailyRoutine.routes.js
+        │   ├── dashboard.routes.js
+        │   ├── dashboardroutes.addition.js
+        │   ├── deadlines.routes.js
+        │   ├── gemini.routes.js
+        │   ├── mockInterview.routes.js
+        │   ├── notes.routes.js
+        │   ├── plan.routes.js
+        │   ├── progress.routes.js
+        │   ├── resource.routes.js
+        │   ├── resume.routes.js
+        │   ├── revision.routes.js
+        │   ├── subtopics.routes.js
+        │   └── topics.routes.js
+        ├── services/
+        │   ├── contact.service.js
+        │   ├── daily-routine-dashboard.service.js
+        │   ├── dailyRoutine.service.js
+        │   ├── dailyRoutineGemini.service.js
+        │   ├── dashboard.service.js
+        │   ├── deadline.service.js
+        │   ├── gemini.service.js
+        │   ├── mockInterview.service.js
+        │   ├── notes.service.js
+        │   ├── plan.service.js
+        │   ├── progress.service.js
+        │   ├── resource.service.js
+        │   ├── resume.service.js
+        │   ├── revision.service.js
+        │   ├── subtopics.service.js
+        │   ├── topic.service.js
+        │   └── user.service.js
+        └── utils/
+                ├── ApiError.js
+                ├── cloudinary.helper.js
+                ├── db.js
+                └── responseHelper.js
 ```
 
-### Directory Breakdown
+### Directory Responsibilities
 
-- **`config`**: Contains configuration files, primarily for managing environment variables.
-- **`controllers`**: Each file corresponds to a resource (e.g., `notes.controller.js`) and handles incoming HTTP requests, validates input, and calls the appropriate service to execute business logic.
-- **`middlewares`**: Holds custom middleware functions. Key middleware includes authentication checks (`auth.middleware.js`) and error handling.
-- **`models`**: Defines the Mongoose schemas for all database collections (e.g., `user.model.js`, `note.model.js`).
-- **`routes`**: Defines the API endpoints. Each file maps HTTP methods and URLs to specific controller functions.
-- **`services`**: Contains the core business logic of the application. Controllers delegate tasks to these services. This keeps the controllers lean and focused on handling the HTTP layer.
-- **`utils`**: Includes utility modules, such as the database connection setup (`db.js`) and response helpers.
+- **`config/`**: Environment and API key configuration.
+- **`controllers/`**: HTTP layer, request parsing, status codes, response formatting.
+- **`middlewares/`**: Cross-cutting concerns such as auth and global error handling.
+- **`models/`**: Mongoose schemas and indexes.
+- **`routes/`**: Endpoint declarations and middleware composition.
+- **`services/`**: Core business logic and integrations (DB and Gemini).
+- **`utils/`**: Shared helpers for DB connection and response formatting.
 
 ## 3. Architectural Pattern
 
-The application employs a layered architecture that is a variation of the **Model-View-Controller (MVC)** pattern, often referred to as a **Model-Service-Controller** or **Service-Oriented Architecture**.
+The service follows a layered **Route -> Controller -> Service -> Model** architecture:
 
-- **Models**: Represent the data structure and interact with the database.
-- **Services**: Encapsulate the business logic.
-- **Controllers**: Handle the presentation logic (in this case, the API request/response cycle).
-- **Routes**: Map URLs to controllers.
+1. Route maps an endpoint and binds middleware.
+2. Controller validates request data and orchestrates the action.
+3. Service executes domain logic and external API calls.
+4. Model handles persistence in MongoDB.
+5. Controller returns standardized response JSON.
 
-This separation makes the application easier to maintain, scale, and test.
+This pattern keeps transport concerns separate from business logic and improves maintainability.
 
-## 4. Data Flow
+## 4. Runtime Composition
 
-A typical API request flows through the application as follows:
+`server/app.js` is the composition root for middleware and route registration.
 
-1.  **HTTP Request**: A client sends a request to an API endpoint (e.g., `POST /api/notes`).
-2.  **Routing**: The Express router defined in `server/app.js` and the corresponding file in `server/routes/` matches the endpoint and directs the request to the appropriate controller function (e.g., `createNote` in `notes.controller.js`).
-3.  **Middleware**: The request passes through any configured middleware, such as the authentication middleware which verifies the JWT.
-4.  **Controller**: The controller function receives the request, extracts relevant data from the request body, parameters, or query string.
-5.  **Service**: The controller calls the corresponding service function (e.g., `notes.service.js`) to perform the main business logic.
-6.  **Model**: The service interacts with the database through Mongoose models to create, read, update, or delete data.
-7.  **Response**: The service returns the result to the controller, which then formats and sends the HTTP response back to the client.
+Mounted API groups:
 
-## 5. Key Components
+- `/api/auth`
+- `/api/topics`
+- `/api/subtopics`
+- `/api/notes`
+- `/api/progress`
+- `/api/deadlines`
+- `/api/gemini`
+- `/api/revisions`
+- `/api/mock-interview`
+- `/api/resource`
+- `/api/dashboard`
+- `/api/resume`
+- `/api/plans`
+- `/api/contact`
+- `/api/routine`
 
-### Authentication
+Global middlewares in active use:
 
-Authentication is handled using JWT. The flow is as follows:
-1.  A user logs in with their credentials via `/api/auth/login`.
-2.  The `auth.controller.js` uses the `user.service.js` to validate the credentials.
-3.  Upon successful validation, a JWT is generated and sent back to the client.
-4.  The client includes the JWT in the `Authorization` header for all subsequent requests to protected endpoints.
-5.  The `auth.middleware.js` middleware intercepts these requests, verifies the JWT, and attaches the user's information to the request object.
+- `cors()`
+- `express.json()`
+- `errorHandler` from `error.middlewares.js` (registered after routes)
 
-### AI Integration (Google Gemini)
+`server/server.js` starts the HTTP server using `process.env.PORT` with fallback `5000`.
 
-The application integrates with the Google Gemini API to provide AI-powered features.
+## 5. Request and Data Flow
 
-- **`gemini.routes.js`**: Defines the `/api/gemini` endpoint.
-- **`gemini.controller.js`**: The `trackPreparation` function in this controller is responsible for fetching all of a user's notes. It then formats these notes into a single string.
-- **`gemini.service.js`**: This service receives the formatted notes and sends them to the Google Gemini API for analysis. It uses the `gemini-1.5-flash-latest` model to analyze the user's preparation based on their notes and provides suggestions for improvement.
+Typical protected flow:
 
-This integration allows the application to offer a "preparation analysis" feature, giving users AI-powered feedback on their study habits.
+1. Client sends request with `Authorization: Bearer <token>`.
+2. Route applies `auth.middleware.js`.
+3. Auth middleware verifies JWT and sets both `req.user.id` and `req.userId`.
+4. Controller calls a service function.
+5. Service interacts with Mongoose models and optional Gemini APIs.
+6. Controller returns `successResponse(...)` or `errorResponse(...)`.
+7. Unhandled errors are captured by the global `errorHandler` middleware.
 
-### Mock Interview Feature
+Session-related behavior:
 
-The application provides a mock interview feature to help users practice for technical interviews.
+- On login, `user.service.js` creates a `Session` document and returns `sessionId` with JWT.
+- `updateLastActivity.js` is present for tracking heartbeat-style activity updates using session id headers/body.
 
-- **`mockInterview.routes.js`**: Defines endpoints for starting interviews, submitting answers, and getting feedback.
-- **`mockInterview.controller.js`**: Handles the logic for creating interview sessions, processing user answers, and interacting with the Gemini API for generating questions and feedback.
-- **`mockInterview.service.js`**: Contains the core business logic for the mock interview feature, including communication with the Gemini API to get interview questions and evaluate answers.
-- **`gemini.service.js`**: The Gemini service is also used by the mock interview feature to generate questions and analyze user responses, providing a realistic interview experience.
+## 6. Core Feature Modules
 
-## 6. Database Schema
+### Authentication and User
 
-The application uses several Mongoose models to define the database schema. The key models are:
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- Password hashing with `bcryptjs`.
+- JWT contains `userId` and `role`.
+- User profile fields include `jobProfile`, `bio`, and `avatar` metadata.
 
-- **`User`**: Stores user information, including name, email, and hashed password.
-- **`Topic`**: Represents a topic created by a user.
-- **`Subtopic`**: Represents a sub-topic within a topic.
-- **`Note`**: Stores the content of a note, linked to a sub-topic.
-- **`MockInterview`**: Stores details about mock interview sessions, including questions, user answers, and AI-generated feedback.
-- **`Progress`**: Tracks the user's progress on different topics.
-- **`Deadline`**: Stores deadlines for topics.
-- **`Resource`**: Stores external resources related to topics.
-- **`Revision`**: Manages revision schedules for topics.
+### Topic, Subtopic, Notes, Progress, Deadlines, Revision
 
-These models are interconnected to create a relational-like structure within the NoSQL database.
+- Topic and subtopic CRUD-style endpoints.
+- Notes endpoints support create/update/get/list by topic/list by subtopic/delete.
+- Notes store revision metadata (`lastRevisedAt`, `revisionDueDate`, `revisionStage`, `skippedCount`).
+- Progress tracks percentage per topic/subtopic/user with a unique compound index.
+- Deadlines support create/list/status update/delete.
+- Revision routes support due items, drill, weak notes, and complete actions.
 
-## 7. Error Handling
+### Daily Routine and Productivity Dashboard
 
-The application uses a centralized error handling mechanism.
+`/api/routine/*` combines task planning and analytics:
 
-- **`error.middlewares.js`**: A custom error-handling middleware can be implemented to catch errors that occur in the application.
-- **`responseHelper.js`**: The `successResponse` and `errorResponse` functions in this utility provide a consistent format for all API responses, which simplifies error handling on the client-side.
+- Template management (`/templates`).
+- Daily log lifecycle (`/today`, `/log/:date`, task toggle).
+- Tracking helpers (`/recent`, `/streak`).
+- AI insight generation (`/log/:date/insight`).
+- Dashboard views (`/dashboard`, `/dashboard/eod`, `/dashboard/pattern`, `/dashboard/focus`, `/dashboard/job-readiness`).
 
-## 8. Future Improvements
+Data is modeled via `TaskTemplate` and `DailyLog` in `dailytask.model.js` with one-log-per-user-per-date indexing.
 
-- **Implement comprehensive testing**: Add unit and integration tests to ensure code quality and reliability.
-- **Input validation**: Use a library like Joi or express-validator to implement robust input validation in the controllers.
-- **Caching**: Introduce a caching layer (e.g., Redis) to improve performance for frequently accessed data.
-- **API Documentation**: Generate API documentation using a tool like Swagger or Postman to make the API easier to consume.
+### Gemini-Powered Features
+
+Gemini usage is spread across modules:
+
+- `gemini.service.js`
+    - Text analysis: preparation analysis.
+    - JSON generation helper (`generateJson`) with response cleanup/parsing.
+    - Resume analysis prompt generation.
+    - Resource content analysis prompt generation.
+- `dailyRoutineGemini.service.js`
+    - Uses `@google/genai` and model `gemini-2.5-flash-preview-04-17` for daily coaching insights.
+- `mockInterview.service.js`
+    - AI-generated interview questions.
+    - AI-generated detailed feedback and summary.
+
+### Mock Interview
+
+Endpoints under `/api/mock-interview`:
+
+- `POST /start`
+- `POST /answer`
+- `GET /results/:sessionId`
+- `POST /pause`
+- `POST /resume`
+- `GET /history/:userId`
+
+State transitions are driven by `status` values: `InProgress`, `Paused`, `Completed`.
+
+### Resume and Resource Uploads
+
+- Resume route: `POST /api/resume/analyze`
+    - Accepts file upload (`multer` + Cloudinary).
+    - Downloads uploaded file from Cloudinary URL.
+    - Extracts text from PDF or DOCX.
+    - Sends extracted text for Gemini analysis.
+
+- Resource routes under `/api/resource`
+    - Upload file or save external link.
+    - Fetch by topic.
+    - Delete resource and Cloudinary object when applicable.
+
+### Smart Plan and Contact
+
+- Plans (`/api/plans`) generate AI-based study plans, mark status, and expose progress summary.
+- Contact (`/api/contact`) supports public submit and list retrieval.
+
+## 7. Database Schema Overview
+
+Current models in active codebase:
+
+- **User**: user identity, role, profile fields.
+- **Session**: login sessions (`startTime`, `endTime`, `duration`, `lastActivityTime`).
+- **Topic** and **Subtopic**: learning content hierarchy.
+- **Note**: notes plus spaced-revision tracking fields.
+- **DeletedNote**: soft archive/restore metadata for deleted notes.
+- **Progress**: topic/subtopic progress percentages.
+- **Deadline**: due-date tracking by user/topic/subtopic.
+- **Plan**: generated study plan entries and completion status.
+- **TaskTemplate** and **DailyLog** (from `dailytask.model.js`): daily routine planning and execution logs.
+- **MockInterview**: interview sessions, answers, feedback, score.
+- **Resource**: file/link resources mapped to topics/subtopics.
+- **Contact**: contact form submissions.
+
+## 8. Error Handling and Response Strategy
+
+- `responseHelper.js`
+    - `successResponse(res, data, message, statusCode)`
+    - `errorResponse(res, error, statusCode)`
+- `error.middlewares.js`
+    - Catch-all global handler logs stack and returns structured JSON error response.
+
+Both patterns are used in the codebase: some modules rely on helper responses, while some controllers return direct `res.status(...).json(...)` responses.
+
+## 9. Notes and Improvement Opportunities
+
+- **Route consistency:** Most routes are mounted under plural nouns, but there are mixed naming patterns (`/api/resource`, `/api/plans`, `/api/routine`).
+- **Validation:** Input validation is mostly manual; introducing Joi or Zod would reduce edge-case failures.
+- **Testing:** Unit/integration test coverage is not yet implemented.
+- **Documentation:** Endpoint-level API docs (OpenAPI/Swagger) would improve consumer onboarding.
+- **Cleanup:** `dashboardroutes.addition.js` exists but is not mounted in `app.js`.
