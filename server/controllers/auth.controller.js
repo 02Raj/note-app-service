@@ -41,6 +41,7 @@ const login = async (req, res) => {
       _id: result.user._id,
       token: result.token,
       sessionId: result.sessionId, // <--- इसे जोड़ें
+      interviewPrep: result.interviewPrep,
     }, "Login successful", 200);
 
   } catch (err) {

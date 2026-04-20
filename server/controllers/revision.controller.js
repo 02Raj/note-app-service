@@ -36,10 +36,12 @@ const markAsRevised = async (req, res) => {
   try {
     const { id } = req.params;
     const { rating } = req.body; // "got_it" | "shaky" | "forgot"
+    const durationMinutes = Number(req.body.durationMinutes || 0);
     const updatedNote = await revisionService.markNoteAsRevised(
       id,
       req.userId,
-      rating
+      rating,
+      durationMinutes
     );
     successResponse(res, updatedNote, "Note marked as revised. Next revision scheduled.");
   } catch (error) {
