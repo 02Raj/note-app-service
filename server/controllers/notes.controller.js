@@ -14,7 +14,7 @@ const { successResponse, errorResponse } = require("../utils/responseHelper");
  */
 const create = async (req, res) => {
   try {
-    const { title, content, topicId, subtopicId } = req.body;
+    const { title, content, topicId, subtopicId, isInterviewRelevant, priority } = req.body;
 
     if (!title) return errorResponse(res, "Title is required", 400);
 
@@ -23,6 +23,8 @@ const create = async (req, res) => {
       content,
       topicId: topicId || null,
       subtopicId: subtopicId || null,
+      isInterviewRelevant: typeof isInterviewRelevant === "boolean" ? isInterviewRelevant : true,
+      priority: ["low", "medium", "high"].includes(priority) ? priority : "medium",
       createdBy: req.userId,
     });
 
@@ -116,7 +118,7 @@ const update = async (req, res) => {
   try {
     const { id } = req.params;
     // req.body se values nikalein
-    const { title, content, topicId, subtopicId } = req.body;
+    const { title, content, topicId, subtopicId, isInterviewRelevant, priority } = req.body;
 
     // --- SOLUTION START ---
     // Yahan check karein ki subtopicId empty to nahi hai.
@@ -125,12 +127,22 @@ const update = async (req, res) => {
     // --- SOLUTION END ---
 
     // updateNoteById ko cleaned data ke saath call karein
-    const updatedNote = await updateNoteById(id, req.userId, {
+    const payload = {
       title,
       content,
       topicId,
       subtopicId: finalSubtopicId, // Yahan updated variable use karein
-    });
+    };
+
+    if (typeof isInterviewRelevant === "boolean") {
+      payload.isInterviewRelevant = isInterviewRelevant;
+    }
+
+    if (["low", "medium", "high"].includes(priority)) {
+      payload.priority = priority;
+    }
+
+    const updatedNote = await updateNoteById(id, req.userId, payload);
 
     if (!updatedNote) {
       return errorResponse(res, "Note not found or unauthorized", 404);

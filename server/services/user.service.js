@@ -2,6 +2,7 @@ const User = require("../models/user.model");
 const bcrypt = require("bcryptjs");
 const jwt =require("jsonwebtoken");
 const Session = require("../models/session.model");
+const interviewDashboardService = require("./interview-dashboard.service");
 const registerUser = async ({ name, email, password }) => {
   const existingUser = await User.findOne({ email });
   if (existingUser) {
@@ -42,6 +43,10 @@ const loginUser = async ({ email, password }) => {
   });
   await newSession.save();
 
+  const interviewPrep = await interviewDashboardService.getInterviewPrepSetupStatus(
+    user._id
+  );
+
   // Return user data without role to match the expected response format
   return { 
     user: { 
@@ -52,6 +57,7 @@ const loginUser = async ({ email, password }) => {
     }, 
     token,
     sessionId: newSession._id,
+    interviewPrep,
   };
 };
 

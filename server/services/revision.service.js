@@ -1,4 +1,5 @@
 const Note = require("../models/note.model");
+const NoteRevisionLog = require("../models/noteRevisionLog.model");
 
 const revisionIntervals = [1, 3, 7, 14, 30];
 
@@ -15,7 +16,12 @@ const getDueRevisionNotes = async (userId) => {
 // ─────────────────────────────────────────
 // 2. Mark as revised (smart spaced repetition)
 // ─────────────────────────────────────────
-const markNoteAsRevised = async (noteId, userId, rating = "got_it") => {
+const markNoteAsRevised = async (
+  noteId,
+  userId,
+  rating = "got_it",
+  durationMinutes = 0
+) => {
   const note = await Note.findOne({ _id: noteId, createdBy: userId });
 
   if (!note) {
@@ -66,6 +72,16 @@ const markNoteAsRevised = async (noteId, userId, rating = "got_it") => {
   note.revisionStage = nextStage;
   note.revisionDueDate = newDueDate;
   note.lastRevisedAt = new Date();
+  note.revisionCount = (note.revisionCount || 0) + 1;
+  note.totalRevisionMinutes = (note.totalRevisionMinutes || 0) + Math.max(0, Number(durationMinutes) || 0);
+
+  await NoteRevisionLog.create({
+    userId,
+    noteId: note._id,
+    rating,
+    durationMinutes: Math.max(0, Number(durationMinutes) || 0),
+    revisedAt: new Date(),
+  });
 
   return await note.save();
 };
