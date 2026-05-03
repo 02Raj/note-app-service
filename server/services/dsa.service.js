@@ -65,11 +65,14 @@ const createProblem = async (userId, data) => {
   const payload = {
     userId,
     title: data.title,
+    leetcodeNumber: data.leetcodeNumber ? Number(data.leetcodeNumber) : null,
     leetcodeUrl: data.leetcodeUrl,
     difficulty: data.difficulty || "Medium",
     pattern: data.pattern,
     subPattern: data.subPattern || "",
     triggerSentence: data.triggerSentence || "",
+    approachUsed: data.approachUsed || "",
+    keyInsight: data.keyInsight || "",
     bruteForce: data.bruteForce || "",
     whyOptimal: data.whyOptimal || "",
     weakPoint: data.weakPoint || "",
@@ -109,11 +112,14 @@ const getProblemById = async (userId, id) => {
 const updateProblem = async (userId, id, updateData) => {
   const allowedFields = [
     "title",
+    "leetcodeNumber",
     "leetcodeUrl",
     "difficulty",
     "pattern",
     "subPattern",
     "triggerSentence",
+    "approachUsed",
+    "keyInsight",
     "bruteForce",
     "whyOptimal",
     "weakPoint",
@@ -366,6 +372,39 @@ const analyzeProblemWithAI = async (userId, payload) => {
   };
 };
 
+// One-shot: analyze with AI and immediately save to DB
+const analyzeAndSave = async (userId, payload) => {
+  if (!payload.title || !payload.leetcodeUrl || !payload.code) {
+    throw new Error("title, leetcodeUrl and code are required");
+  }
+
+  const confidence = Number(payload.confidence || 3);
+
+  const analysis = await analyzeDsaSolution({
+    problemName: payload.title,
+    leetcodeUrl: payload.leetcodeUrl,
+    language: payload.language || "Java",
+    code: payload.code,
+    felt: payload.felt || "",
+    confidence,
+  });
+
+  // Merge AI output with user-provided data (user fields take priority)
+  const mergedData = {
+    ...analysis,
+    ...payload,
+    confidence,
+  };
+
+  const result = await createProblem(userId, mergedData);
+
+  return {
+    problem: result.problem,
+    revisionSchedule: result.revisionSchedule,
+    aiAnalysis: analysis,
+  };
+};
+
 module.exports = {
   REVISION_GAPS,
   getRevisionScheduleDates,
@@ -379,4 +418,5 @@ module.exports = {
   getPatternStats,
   getDashboard,
   analyzeProblemWithAI,
+  analyzeAndSave,
 };

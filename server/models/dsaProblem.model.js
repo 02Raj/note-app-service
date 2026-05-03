@@ -33,6 +33,7 @@ const dsaProblemSchema = new mongoose.Schema(
     },
 
     title: { type: String, required: true, trim: true },
+    leetcodeNumber: { type: Number, default: null },
     leetcodeUrl: { type: String, required: true, trim: true },
     difficulty: {
       type: String,
@@ -44,6 +45,8 @@ const dsaProblemSchema = new mongoose.Schema(
     subPattern: { type: String, trim: true, default: "" },
     triggerSentence: { type: String, trim: true, default: "" },
 
+    approachUsed: { type: String, trim: true, default: "" },
+    keyInsight: { type: String, trim: true, default: "" },
     bruteForce: { type: String, trim: true, default: "" },
     whyOptimal: { type: String, trim: true, default: "" },
     weakPoint: { type: String, trim: true, default: "" },

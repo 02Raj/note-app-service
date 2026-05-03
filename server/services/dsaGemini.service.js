@@ -17,6 +17,8 @@ Required output shape:
   "pattern": "string",
   "subPattern": "string",
   "triggerSentence": "Main isko [PATTERN] isliye pehchanunga kyunki [signal]",
+  "approachUsed": "1-2 line plain English. How to actually solve it step by step. No jargon.",
+  "keyInsight": "One crisp line. The core aha-moment insight that makes this problem click.",
   "bruteForce": "string",
   "whyOptimal": "string",
   "weakPoint": "string",
@@ -33,10 +35,12 @@ Required output shape:
 
 Rules:
 - Keep each explanation short and practical.
+- approachUsed: write like you are telling a friend how to solve it in 1-2 sentences.
+- keyInsight: one punchy line, e.g. "Sorted array means two pointers can shrink the search space greedily".
 - commonMistakes must have at least 3 points.
 - similarProblems must have exactly 3 problems.
 - difficulty values must be one of Easy, Medium, Hard.
-- Never return markdown.
+- Never return markdown, never wrap in code fences.
 
 Problem Name: ${problemName}
 LeetCode URL: ${leetcodeUrl}
@@ -57,6 +61,8 @@ const analyzeDsaSolution = async (payload) => {
     pattern: result.pattern || "",
     subPattern: result.subPattern || "",
     triggerSentence: result.triggerSentence || "",
+    approachUsed: result.approachUsed || "",
+    keyInsight: result.keyInsight || "",
     bruteForce: result.bruteForce || "",
     whyOptimal: result.whyOptimal || "",
     weakPoint: result.weakPoint || "",

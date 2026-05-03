@@ -122,6 +122,34 @@ const analyze = async (req, res) => {
   }
 };
 
+// One-shot: AI analyze + auto-save to DB in a single call
+const analyzeAndSave = async (req, res) => {
+  try {
+    const { title, leetcodeUrl, code } = req.body;
+    if (!title || !leetcodeUrl || !code) {
+      return errorResponse(res, "title, leetcodeUrl and code are required", 400);
+    }
+    const data = await dsaService.analyzeAndSave(req.userId, req.body);
+    return successResponse(res, data, "Problem analyzed and saved successfully", 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 400);
+  }
+};
+
+const searchByNumber = async (req, res) => {
+  try {
+    const lcNum = Number(req.query.leetcodeNumber);
+    if (!lcNum || isNaN(lcNum)) {
+      return errorResponse(res, "leetcodeNumber query param is required and must be a number", 400);
+    }
+    const problems = await dsaService.listProblems(req.userId, {});
+    const match = problems.filter((p) => p.leetcodeNumber === lcNum);
+    return successResponse(res, match, "Search results fetched");
+  } catch (error) {
+    return errorResponse(res, error.message, 500);
+  }
+};
+
 module.exports = {
   createProblem,
   getProblems,
@@ -133,4 +161,6 @@ module.exports = {
   getPatterns,
   getDashboard,
   analyze,
+  analyzeAndSave,
+  searchByNumber,
 };
