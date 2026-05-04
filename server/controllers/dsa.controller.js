@@ -150,6 +150,49 @@ const searchByNumber = async (req, res) => {
   }
 };
 
+// Quick Add: Excel-like minimal input + AI automation
+const quickAdd = async (req, res) => {
+  try {
+    const { leetcodeNumber, title, pattern, code } = req.body;
+    
+    if (!leetcodeNumber || !title || !pattern || !code) {
+      return errorResponse(res, "leetcodeNumber, title, pattern and code are required", 400);
+    }
+
+    const data = await dsaService.quickAddProblem(req.userId, req.body);
+    return successResponse(res, data, "Problem added with AI analysis!", 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 400);
+  }
+};
+
+// Manual Add: Pure Excel-style manual entry (no AI)
+const manualAdd = async (req, res) => {
+  try {
+    const { 
+      title, 
+      pattern, 
+      difficulty, 
+      approachUsed, 
+      timeComplexity, 
+      spaceComplexity, 
+      keyInsight, 
+      lastRevisionDate, 
+      language, 
+      code 
+    } = req.body;
+    
+    if (!title || !pattern || !difficulty || !code) {
+      return errorResponse(res, "title, pattern, difficulty and code are required", 400);
+    }
+
+    const data = await dsaService.manualAddProblem(req.userId, req.body);
+    return successResponse(res, data, "DSA problem saved successfully", 201);
+  } catch (error) {
+    return errorResponse(res, error.message, 400);
+  }
+};
+
 module.exports = {
   createProblem,
   getProblems,
@@ -163,4 +206,6 @@ module.exports = {
   analyze,
   analyzeAndSave,
   searchByNumber,
+  quickAdd,
+  manualAdd,
 };
