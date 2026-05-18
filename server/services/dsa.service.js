@@ -353,8 +353,8 @@ const getDashboard = async (userId) => {
 };
 
 const analyzeProblemWithAI = async (userId, payload) => {
-  if (!payload.problemName || !payload.leetcodeUrl || !payload.code) {
-    throw new Error("problemName, leetcodeUrl and code are required");
+  if (!payload.problemName || !payload.code) {
+    throw new Error("problemName and code are required");
   }
 
   const analysis = await analyzeDsaSolution({
@@ -424,8 +424,8 @@ const quickAddProblem = async (userId, payload) => {
 
 // One-shot: analyze with AI and immediately save to DB
 const analyzeAndSave = async (userId, payload) => {
-  if (!payload.title || !payload.leetcodeUrl || !payload.code) {
-    throw new Error("title, leetcodeUrl and code are required");
+  if (!payload.title || !payload.code) {
+    throw new Error("title and code are required");
   }
 
   const confidence = Number(payload.confidence || 3);

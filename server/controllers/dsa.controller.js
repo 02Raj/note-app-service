@@ -5,8 +5,8 @@ const createProblem = async (req, res) => {
   try {
     const { title, leetcodeUrl, pattern, confidence } = req.body;
 
-    if (!title || !leetcodeUrl || !pattern) {
-      return errorResponse(res, "title, leetcodeUrl and pattern are required", 400);
+    if (!title || !pattern) {
+      return errorResponse(res, "title and pattern are required", 400);
     }
 
     if (confidence && ![1, 2, 3, 4].includes(Number(confidence))) {
@@ -125,9 +125,9 @@ const analyze = async (req, res) => {
 // One-shot: AI analyze + auto-save to DB in a single call
 const analyzeAndSave = async (req, res) => {
   try {
-    const { title, leetcodeUrl, code } = req.body;
-    if (!title || !leetcodeUrl || !code) {
-      return errorResponse(res, "title, leetcodeUrl and code are required", 400);
+    const { title, code } = req.body;
+    if (!title || !code) {
+      return errorResponse(res, "title and code are required", 400);
     }
     const data = await dsaService.analyzeAndSave(req.userId, req.body);
     return successResponse(res, data, "Problem analyzed and saved successfully", 201);

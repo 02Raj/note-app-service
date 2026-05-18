@@ -34,7 +34,7 @@ const dsaProblemSchema = new mongoose.Schema(
 
     title: { type: String, required: true, trim: true },
     leetcodeNumber: { type: Number, default: null },
-    leetcodeUrl: { type: String, required: true, trim: true },
+    leetcodeUrl: { type: String, trim: true, default: "" },
     difficulty: {
       type: String,
       enum: ["Easy", "Medium", "Hard"],
