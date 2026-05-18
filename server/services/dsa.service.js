@@ -132,6 +132,8 @@ const updateProblem = async (userId, id, updateData) => {
     "status",
     "similarProblems",
     "solvedAt",
+    "lastRevisedAt",
+    "nextRevisionDate",
   ];
 
   const payload = {};
