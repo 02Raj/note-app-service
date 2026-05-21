@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./utils/db");
+const { cacheMiddleware, invalidateCacheMiddleware } = require("./middlewares/cache.middleware");
 const {
   swaggerUi,
   openApiSpec,
@@ -15,6 +16,9 @@ connectDB();
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+app.use(invalidateCacheMiddleware);
+app.use(cacheMiddleware());
 
 app.get("/api-docs.json", (req, res) => {
   res.json(openApiSpec);
