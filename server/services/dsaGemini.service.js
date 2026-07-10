@@ -16,6 +16,9 @@ Required output shape:
 {
   "pattern": "string",
   "subPattern": "string",
+  "problemStatement": "1-2 lines. What is this problem asking us to do? Based on the title and code.",
+  "exampleInput": "Give one simple example input based on the code params. Just the raw input values.",
+  "exampleOutput": "Give the expected output for the example input.",
   "triggerSentence": "Main isko [PATTERN] isliye pehchanunga kyunki [signal]",
   "approachUsed": "1-2 line plain English. How to actually solve it step by step. No jargon.",
   "keyInsight": "One crisp line. The core aha-moment insight that makes this problem click.",
@@ -60,6 +63,9 @@ const analyzeDsaSolution = async (payload) => {
   return {
     pattern: result.pattern || "",
     subPattern: result.subPattern || "",
+    problemStatement: result.problemStatement || "",
+    exampleInput: result.exampleInput || "",
+    exampleOutput: result.exampleOutput || "",
     triggerSentence: result.triggerSentence || "",
     approachUsed: result.approachUsed || "",
     keyInsight: result.keyInsight || "",
