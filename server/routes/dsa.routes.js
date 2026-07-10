@@ -28,4 +28,10 @@ router.get("/search", dsaController.searchByNumber);
 router.post("/analyze", dsaController.analyze);            // analyze only — returns JSON, does NOT save
 router.post("/analyze-and-save", dsaController.analyzeAndSave); // analyze + auto-save in one shot ✅
 
+// Quick Add: Excel-like minimal input + AI automation 🚀
+router.post("/quick-add", dsaController.quickAdd);
+
+// Manual Add: Pure Excel-style manual entry (no AI) 📝
+router.post("/manual-add", dsaController.manualAdd);
+
 module.exports = router;

@@ -138,6 +138,8 @@ const updateProblem = async (userId, id, updateData) => {
     "status",
     "similarProblems",
     "solvedAt",
+    "lastRevisedAt",
+    "nextRevisionDate",
   ];
 
   const payload = {};
@@ -359,8 +361,8 @@ const getDashboard = async (userId) => {
 };
 
 const analyzeProblemWithAI = async (userId, payload) => {
-  if (!payload.problemName || !payload.leetcodeUrl || !payload.code) {
-    throw new Error("problemName, leetcodeUrl and code are required");
+  if (!payload.problemName || !payload.code) {
+    throw new Error("problemName and code are required");
   }
 
   const analysis = await analyzeDsaSolution({
@@ -378,10 +380,60 @@ const analyzeProblemWithAI = async (userId, payload) => {
   };
 };
 
+const detectLanguage = (code) => {
+  if (code.includes("function") || code.includes("const") || code.includes("let")) return "JavaScript";
+  if (code.includes("def ") || code.includes("import ")) return "Python";
+  if (code.includes("public class") || code.includes("System.out")) return "Java";
+  if (code.includes("#include") || code.includes("std::")) return "C++";
+  return "JavaScript";
+};
+
+const slugify = (title) => {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .trim();
+};
+
+const quickAddProblem = async (userId, payload) => {
+  const { leetcodeNumber, title, pattern, code } = payload;
+
+  // 1. Build LeetCode URL from number and title
+  const slug = slugify(title);
+  const leetcodeUrl = `https://leetcode.com/problems/${slug}/`;
+
+  // 2. Detect language from code
+  const language = detectLanguage(code);
+
+  // 3. Analyze with AI
+  const analysis = await analyzeDsaSolution({
+    problemName: title,
+    leetcodeUrl,
+    language,
+    code,
+    felt: "",
+    confidence: 3,
+  });
+
+  // 4. Create problem with AI data + user inputs
+  return await createProblem(userId, {
+    leetcodeNumber: Number(leetcodeNumber),
+    title,
+    leetcodeUrl,
+    pattern,
+    code,
+    language,
+    ...analysis,
+    confidence: analysis.confidence || 3,
+  });
+};
+
 // One-shot: analyze with AI and immediately save to DB
 const analyzeAndSave = async (userId, payload) => {
-  if (!payload.title || !payload.leetcodeUrl || !payload.code) {
-    throw new Error("title, leetcodeUrl and code are required");
+  if (!payload.title || !payload.code) {
+    throw new Error("title and code are required");
   }
 
   const confidence = Number(payload.confidence || 3);
@@ -411,6 +463,52 @@ const analyzeAndSave = async (userId, payload) => {
   };
 };
 
+const manualAddProblem = async (userId, payload) => {
+  const { 
+    title, 
+    pattern, 
+    difficulty, 
+    approachUsed, 
+    timeComplexity, 
+    spaceComplexity, 
+    keyInsight, 
+    lastRevisionDate, 
+    language, 
+    code 
+  } = payload;
+
+  // Create problem with manual data only (no AI)
+  const problemPayload = {
+    title,
+    pattern,
+    difficulty,
+    approachUsed: approachUsed || "",
+    timeComplexity: timeComplexity || "",
+    spaceComplexity: spaceComplexity || "",
+    keyInsight: keyInsight || "",
+    code,
+    language: language || "Java",
+    confidence: 3, // Default confidence
+    subPattern: "",
+    triggerSentence: "",
+    bruteForce: "",
+    whyOptimal: "",
+    weakPoint: "",
+    revisionNote: "",
+    commonMistakes: [],
+    similarProblems: [],
+    leetcodeUrl: "",
+    leetcodeNumber: null,
+  };
+
+  // Handle last revision date if provided
+  if (lastRevisionDate) {
+    problemPayload.lastRevisedAt = new Date(lastRevisionDate);
+  }
+
+  return await createProblem(userId, problemPayload);
+};
+
 module.exports = {
   REVISION_GAPS,
   getRevisionScheduleDates,
@@ -425,4 +523,6 @@ module.exports = {
   getDashboard,
   analyzeProblemWithAI,
   analyzeAndSave,
+  quickAddProblem,
+  manualAddProblem,
 };

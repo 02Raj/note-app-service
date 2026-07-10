@@ -75,12 +75,12 @@ const endUserSession = async (sessionId) => {
   // 
   if (session.endTime) {
 
-    return session; // या बस मौजूदा सेशन लौटा दें
+    return session; 
   }
 
   session.endTime = new Date();
   const durationMs = session.endTime.getTime() - session.startTime.getTime();
-  session.duration = Math.round(durationMs / (1000 * 60)); // मिनटों में
+  session.duration = Math.round(durationMs / (1000 * 60)); //
 
   await session.save();
   return session;
