@@ -63,6 +63,9 @@ const dsaRoutes = require("./routes/dsa.routes");
 app.use("/api/dsa", dsaRoutes);
 const interviewDashboardRoutes = require("./routes/interview-dashboard.routes");
 app.use("/api/interview-dashboard", interviewDashboardRoutes);
+
+const aiRoutes = require("./routes/ai.routes");
+app.use("/api/ai", aiRoutes);
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check
