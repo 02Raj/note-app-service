@@ -21,13 +21,10 @@ const generateEmbedding = async (text) => {
   try {
     const ai = getAIClient();
     const response = await ai.models.embedContent({
-      model: "gemini-embedding-2",
+      model: "text-embedding-004",
       contents: text,
-      config: {
-        outputDimensionality: 768
-      }
     });
-    
+
     // The response contains the vector array
     return response.embeddings[0].values;
   } catch (error) {
@@ -36,8 +33,6 @@ const generateEmbedding = async (text) => {
   }
 };
 
-const axios = require("axios");
-
 /**
  * Merge and deduplicate an array of notes into a single optimized note.
  * @param {string} topic - The topic of the notes
@@ -45,12 +40,10 @@ const axios = require("axios");
  * @returns {Promise<string>} The merged content
  */
 const deduplicateAndMergeNotes = async (topic, notesContent) => {
-    try {
-        if (!process.env.OPENROUTER_API_KEY) {
-            throw new Error("OPENROUTER_API_KEY is not set in environment variables.");
-        }
+  try {
+    const ai = getAIClient();
 
-        const prompt = `
+    const prompt = `
 I have multiple notes on the topic: "${topic}". 
 These notes might contain duplicate information, conflicting ways of explaining the same concept, or varying levels of difficulty.
 
@@ -67,22 +60,16 @@ Your task is to:
 Return ONLY the merged content in Markdown format, do not add conversational text.
         `;
 
-        const response = await axios.post("https://openrouter.ai/api/v1/chat/completions", {
-            // Using a free and fast Llama 3 model from OpenRouter
-            model: "meta-llama/llama-3-8b-instruct:free",
-            messages: [{ role: "user", content: prompt }]
-        }, {
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json"
-            }
-        });
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash",
+      contents: prompt,
+    });
 
-        return response.data.choices[0].message.content;
-    } catch (error) {
-        console.error("Error merging notes with OpenRouter:", error?.response?.data || error.message);
-        throw new Error("Failed to merge notes with OpenRouter");
-    }
+    return response.text;
+  } catch (error) {
+    console.error("Error merging notes with Gemini:", error.message);
+    throw new Error("Failed to merge notes");
+  }
 };
 
 module.exports = {

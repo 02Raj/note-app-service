@@ -1,3 +1,4 @@
+require("./utils/logger.util"); // Initialize logger first to capture all console.logs
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
@@ -66,6 +67,9 @@ app.use("/api/interview-dashboard", interviewDashboardRoutes);
 
 const aiRoutes = require("./routes/ai.routes");
 app.use("/api/ai", aiRoutes);
+
+const systemRoutes = require("./routes/system.routes");
+app.use("/api/system", systemRoutes);
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check
