@@ -12,6 +12,8 @@ const getAIClient = () => {
   return aiClient;
 };
 
+
+
 /**
  * Generate a vector embedding for a given text
  * @param {string} text - The text to embed
