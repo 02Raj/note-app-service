@@ -21,7 +21,8 @@ const backfillEmbeddings = async () => {
     const notes = await Note.find({ 
         $or: [
             { embedding: { $exists: false } },
-            { embedding: { $size: 0 } }
+            { embedding: { $size: 0 } },
+            { embedding: { $not: { $size: 768 } } }
         ]
     });
 
