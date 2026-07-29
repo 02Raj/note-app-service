@@ -3,18 +3,20 @@ const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-async function list() {
+async function testEmbed() {
     try {
-        const response = await ai.models.list();
-        // The new SDK usually returns an iterator or an array
-        for await (const model of response) {
-            if (model.name.includes("embed") || model.name.includes("flash")) {
-                console.log(model.name);
+        console.log("Testing ai.models.embedContent with gemini-embedding-2 and outputDimensionality...");
+        const response = await ai.models.embedContent({
+            model: "gemini-embedding-2",
+            contents: "Hello world",
+            config: {
+                outputDimensionality: 768
             }
-        }
+        });
+        console.log("Success! Embedding length:", response.embeddings[0].values.length);
     } catch (e) {
-        console.error("Error listing models:", e.message);
+        console.error("Error with embedding:", e.message);
     }
 }
 
-list();
+testEmbed();
