@@ -17,6 +17,11 @@ const noteSchema = new mongoose.Schema({
     index: true,
   },
 
+  color: {
+    type: String,
+    default: null, // null means no color assigned
+  },
+
   lastRevisedAt: { type: Date },
   revisionDueDate: { type: Date, default: Date.now },
   revisionStage: { type: Number, default: 0 },
