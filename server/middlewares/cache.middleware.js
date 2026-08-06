@@ -1,18 +1,16 @@
 const jwt = require("jsonwebtoken");
+const { redisClient, isRedisConnected } = require("../utils/redis");
 
-// Simple in-memory cache store
-const cache = new Map();
-
-// Default TTL (time-to-live) in milliseconds (e.g., 5 minutes = 300,000 ms)
-const DEFAULT_TTL = 5 * 60 * 1000;
+// Default TTL in seconds (e.g., 5 minutes = 300 seconds)
+const DEFAULT_TTL = 5 * 60;
 
 /**
  * Middleware to cache GET responses.
  */
 const cacheMiddleware = (ttl = DEFAULT_TTL) => {
-  return (req, res, next) => {
-    // Only cache GET requests
-    if (req.method !== "GET") {
+  return async (req, res, next) => {
+    // Only cache GET requests and check if redis is connected
+    if (req.method !== "GET" || !isRedisConnected()) {
       return next();
     }
 
@@ -29,7 +27,6 @@ const cacheMiddleware = (ttl = DEFAULT_TTL) => {
     // Extract user token to identify the user for cache isolation
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) {
-      // If there is no token, don't serve from cache or cache the response
       return next();
     }
 
@@ -41,30 +38,41 @@ const cacheMiddleware = (ttl = DEFAULT_TTL) => {
       req.userId = decoded.userId;
       req.user = { id: decoded.userId };
     } catch (err) {
-      // If token verification fails, don't cache or serve from cache;
-      // let authMiddleware handle returning the 401 response
       return next();
     }
 
     const cacheKey = `${userId}:${req.originalUrl}`;
-    const cachedResponse = cache.get(cacheKey);
-    const now = Date.now();
-
-    if (cachedResponse && (now - cachedResponse.timestamp < ttl)) {
-      // Serve from cache
-      res.setHeader("X-Cache", "HIT");
-      return res.status(cachedResponse.statusCode).json(cachedResponse.body);
+    
+    try {
+      const cachedData = await redisClient.get(cacheKey);
+      if (cachedData) {
+        const cachedResponse = JSON.parse(cachedData);
+        res.setHeader("X-Cache", "HIT");
+        return res.status(cachedResponse.statusCode).json(cachedResponse.body);
+      }
+    } catch (err) {
+      console.error("Redis Get Error:", err);
+      // Fallback to normal execution if redis fails
     }
 
     // Intercept res.json to cache the successful response
     const originalJson = res.json;
     res.json = function (body) {
       if (res.statusCode >= 200 && res.statusCode < 300) {
-        cache.set(cacheKey, {
-          body,
-          statusCode: res.statusCode,
-          timestamp: Date.now(),
-        });
+        try {
+          if (isRedisConnected()) {
+            const cacheValue = JSON.stringify({
+              body,
+              statusCode: res.statusCode,
+            });
+            // Using setEx which sets value with expiration
+            redisClient.setEx(cacheKey, ttl, cacheValue).catch(err => {
+              console.error("Redis Set Error:", err);
+            });
+          }
+        } catch (err) {
+          console.error("Redis Cache Serialization Error:", err);
+        }
       }
       res.json = originalJson;
       return originalJson.call(this, body);
@@ -79,13 +87,18 @@ const cacheMiddleware = (ttl = DEFAULT_TTL) => {
  * Invalidate cache for a specific user.
  * @param {string} userId - The ID of the user.
  */
-const invalidateUserCache = (userId) => {
-  if (!userId) return;
-  const prefix = `${userId}:`;
-  for (const key of cache.keys()) {
-    if (key.startsWith(prefix)) {
-      cache.delete(key);
+const invalidateUserCache = async (userId) => {
+  if (!userId || !isRedisConnected()) return;
+  const prefix = `${userId}:*`;
+  
+  try {
+    // In redis v4, keys method is available directly on client
+    const keys = await redisClient.keys(prefix);
+    if (keys.length > 0) {
+      await redisClient.del(keys);
     }
+  } catch (err) {
+    console.error("Redis Invalidate Error:", err);
   }
 };
 
@@ -101,15 +114,13 @@ const invalidateCacheMiddleware = (req, res, next) => {
         if (userId) {
           invalidateUserCache(userId);
         } else {
-          // If userId is not set directly (e.g. auth middleware hasn't attached it yet, or token was verified elsewhere),
-          // try to decode JWT token from header to find userId and clear cache
           const token = req.headers.authorization?.split(" ")[1];
           if (token) {
             try {
               const decoded = jwt.verify(token, process.env.JWT_SECRET);
               invalidateUserCache(decoded.userId);
             } catch (err) {
-              // Ignore token decode errors during invalidation
+              // Ignore token decode errors
             }
           }
         }

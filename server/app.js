@@ -1,7 +1,7 @@
 require("./utils/logger.util"); // Initialize logger first to capture all console.logs
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
-const dotenv = require("dotenv");
 const connectDB = require("./utils/db");
 const { cacheMiddleware, invalidateCacheMiddleware } = require("./middlewares/cache.middleware");
 const {
@@ -9,8 +9,6 @@ const {
   openApiSpec,
   swaggerOptions,
 } = require("./config/openapi");
-
-dotenv.config();
 
 connectDB();
 
