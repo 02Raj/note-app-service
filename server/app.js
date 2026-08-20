@@ -1,7 +1,8 @@
+require("./utils/logger.util"); // Initialize logger first to capture all console.logs
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const compression = require("compression");
-const dotenv = require("dotenv");
 const connectDB = require("./utils/db");
 const { cacheMiddleware, invalidateCacheMiddleware } = require("./middlewares/cache.middleware");
 const {
@@ -9,8 +10,6 @@ const {
   openApiSpec,
   swaggerOptions,
 } = require("./config/openapi");
-
-dotenv.config();
 
 connectDB();
 
@@ -65,6 +64,12 @@ const dsaRoutes = require("./routes/dsa.routes");
 app.use("/api/dsa", dsaRoutes);
 const interviewDashboardRoutes = require("./routes/interview-dashboard.routes");
 app.use("/api/interview-dashboard", interviewDashboardRoutes);
+
+const aiRoutes = require("./routes/ai.routes");
+app.use("/api/ai", aiRoutes);
+
+const systemRoutes = require("./routes/system.routes");
+app.use("/api/system", systemRoutes);
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check

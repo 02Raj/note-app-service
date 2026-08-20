@@ -40,6 +40,9 @@ const dsaProblemSchema = new mongoose.Schema(
       enum: ["Easy", "Medium", "Hard"],
       default: "Medium",
     },
+    problemStatement: { type: String, trim: true, default: "" },
+    exampleInput: { type: String, trim: true, default: "" },
+    exampleOutput: { type: String, trim: true, default: "" },
 
     pattern: { type: String, required: true, trim: true },
     subPattern: { type: String, trim: true, default: "" },

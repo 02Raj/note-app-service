@@ -14,7 +14,7 @@ const { successResponse, errorResponse } = require("../utils/responseHelper");
  */
 const create = async (req, res) => {
   try {
-    const { title, content, topicId, subtopicId, isInterviewRelevant, priority } = req.body;
+    const { title, content, topicId, subtopicId, isInterviewRelevant, priority, color } = req.body;
 
     if (!title) return errorResponse(res, "Title is required", 400);
 
@@ -25,6 +25,7 @@ const create = async (req, res) => {
       subtopicId: subtopicId || null,
       isInterviewRelevant: typeof isInterviewRelevant === "boolean" ? isInterviewRelevant : true,
       priority: ["low", "medium", "high"].includes(priority) ? priority : "medium",
+      color: color || null,
       createdBy: req.userId,
     });
 
@@ -121,7 +122,7 @@ const update = async (req, res) => {
   try {
     const { id } = req.params;
     // req.body se values nikalein
-    const { title, content, topicId, subtopicId, isInterviewRelevant, priority } = req.body;
+    const { title, content, topicId, subtopicId, isInterviewRelevant, priority, color } = req.body;
 
     // --- SOLUTION START ---
     // Yahan check karein ki subtopicId empty to nahi hai.
@@ -143,6 +144,11 @@ const update = async (req, res) => {
 
     if (["low", "medium", "high"].includes(priority)) {
       payload.priority = priority;
+    }
+
+    // color: null bhi valid hai (color hatane ke liye)
+    if (color !== undefined) {
+      payload.color = color || null;
     }
 
     const updatedNote = await updateNoteById(id, req.userId, payload);

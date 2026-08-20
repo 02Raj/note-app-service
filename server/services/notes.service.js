@@ -1,11 +1,22 @@
 const Note = require("../models/note.model");
 const DeletedNote = require("../models/deletedNote.model");
+const { generateEmbedding } = require("../utils/ai.util");
+
 /**
  * Creates a new note in the database.
  * @param {object} data - The note data.
  * @returns {Promise<Document>} The saved note document.
  */
 const createNote = async (data) => {
+  try {
+    const textToEmbed = `${data.title || ''} ${data.content || ''}`.trim();
+    if (textToEmbed) {
+      data.embedding = await generateEmbedding(textToEmbed);
+    }
+  } catch (error) {
+    console.error("Failed to generate embedding for new note:", error.message);
+  }
+
   const note = new Note(data);
   return await note.save();
 };
@@ -85,6 +96,19 @@ const deleteNote = async (id, userId) => {
  * @returns {Promise<Document|null>} The updated note or null if not found.
  */
 const updateNoteById = async (id, userId, updateData) => {
+  if (updateData.title || updateData.content) {
+    try {
+      // In a real scenario we'd fetch the existing note if only one field is updated,
+      // but assuming the controller passes both if either changes, we just embed what we have.
+      const textToEmbed = `${updateData.title || ''} ${updateData.content || ''}`.trim();
+      if (textToEmbed) {
+        updateData.embedding = await generateEmbedding(textToEmbed);
+      }
+    } catch (error) {
+      console.error("Failed to update embedding for note:", error.message);
+    }
+  }
+
   return await Note.findOneAndUpdate(
     { _id: id, createdBy: userId },
     { $set: updateData },

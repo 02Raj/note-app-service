@@ -9,11 +9,17 @@ const noteSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 
   isInterviewRelevant: { type: Boolean, default: true, index: true },
+  embedding: { type: [Number] }, // For AI Vector Search
   priority: {
     type: String,
     enum: ["low", "medium", "high"],
     default: "medium",
     index: true,
+  },
+
+  color: {
+    type: String,
+    default: null, // null means no color assigned
   },
 
   lastRevisedAt: { type: Date },
