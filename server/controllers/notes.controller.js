@@ -39,7 +39,10 @@ const create = async (req, res) => {
  */
 const getAll = async (req, res) => {
   try {
-    const notes = await getAllNotes(req.userId);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 0; // Default 0 means fetch all (backward compatible)
+    
+    const notes = await getAllNotes(req.userId, page, limit);
     return successResponse(res, notes, "All notes fetched");
   } catch (error) {
     return errorResponse(res, error.message);

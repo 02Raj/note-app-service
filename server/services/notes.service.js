@@ -11,12 +11,18 @@ const createNote = async (data) => {
 };
 
 /**
- * Retrieves all notes created by a specific user.
+ * Retrieves all notes created by a specific user (with optional pagination).
  * @param {string} userId - The ID of the user.
+ * @param {number} page - The page number.
+ * @param {number} limit - The number of notes per page (0 means all).
  * @returns {Promise<Array<Document>>} A promise that resolves to an array of notes.
  */
-const getAllNotes = async (userId) => {
-  return await Note.find({ createdBy: userId }).sort({ createdAt: -1 });
+const getAllNotes = async (userId, page = 1, limit = 0) => {
+  const query = Note.find({ createdBy: userId }).sort({ createdAt: -1 });
+  if (limit > 0) {
+    query.skip((page - 1) * limit).limit(limit);
+  }
+  return await query;
 };
 
 /**
