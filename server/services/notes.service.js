@@ -29,7 +29,7 @@ const createNote = async (data) => {
  * @returns {Promise<Array<Document>>} A promise that resolves to an array of notes.
  */
 const getAllNotes = async (userId, page = 1, limit = 0) => {
-  const query = Note.find({ createdBy: userId }).sort({ createdAt: -1 });
+  const query = Note.find({ createdBy: userId }).select("-embedding -content").sort({ createdAt: -1 });
   if (limit > 0) {
     query.skip((page - 1) * limit).limit(limit);
   }
@@ -53,7 +53,7 @@ const getNoteById = async (id, userId) => {
  * @returns {Promise<Array<Document>>} A promise that resolves to an array of notes.
  */
 const getNotesByTopic = async (topicId, userId) => {
-  return await Note.find({ topicId, createdBy: userId }).sort({ createdAt: -1 });
+  return await Note.find({ topicId, createdBy: userId }).select("-embedding -content").sort({ createdAt: -1 });
 };
 
 /**
@@ -63,7 +63,7 @@ const getNotesByTopic = async (topicId, userId) => {
  * @returns {Promise<Array<Document>>} A promise that resolves to an array of notes.
  */
 const getNotesBySubtopic = async (subtopicId, userId) => {
-  return await Note.find({ subtopicId, createdBy: userId }).sort({ createdAt: -1 });
+  return await Note.find({ subtopicId, createdBy: userId }).select("-embedding -content").sort({ createdAt: -1 });
 };
 
 /**

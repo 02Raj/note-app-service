@@ -105,7 +105,7 @@ const createProblem = async (userId, data) => {
 
 const listProblems = async (userId, query = {}) => {
   const filters = buildFilters(userId, query);
-  return DsaProblem.find(filters).sort({ createdAt: -1 });
+  return DsaProblem.find(filters).select("-code -problemStatement -exampleInput -exampleOutput -approachUsed -keyInsight -bruteForce -whyOptimal -weakPoint -revisionNote").sort({ createdAt: -1 });
 };
 
 const getProblemById = async (userId, id) => {
