@@ -37,6 +37,8 @@ const noteRoutes = require("./routes/notes.routes");
 app.use("/api/notes", noteRoutes);
 const dsaRoutes = require("./routes/dsa.routes");
 app.use("/api/dsa", dsaRoutes);
+const jobRoutes = require("./routes/job.routes");
+app.use("/api/jobs", jobRoutes);
 const { errorHandler } = require('./middlewares/error.middlewares.js');
 app.use(errorHandler);
 // Health check

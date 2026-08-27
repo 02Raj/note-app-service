@@ -1,0 +1,75 @@
+const axios = require("axios");
+
+const buildJobParsingPrompt = (rawText) => {
+  return `
+You are an expert HR assistant and data extractor.
+Analyze the following raw text which contains one or more job postings or recruitment messages.
+Extract the relevant details and return them as a strict JSON object.
+
+Required output shape:
+{
+  "companyName": "string or 'Unknown Company' if not found",
+  "skillsRequired": ["string", "string"],
+  "contactEmail": "string or null if not found",
+  "contactPhone": "string or null if not found",
+  "workMode": "Remote" | "Hybrid" | "Onsite" | "Unknown"
+}
+
+Rules:
+- Be as accurate as possible. Look for email patterns and phone number patterns.
+- If multiple jobs are present, just extract the primary one or combine the most prominent contact details and skills.
+- Only output valid JSON. Do not wrap in Markdown fences.
+
+Raw Text:
+${rawText}
+`.trim();
+};
+
+const parseJobPost = async (rawText) => {
+  if (!rawText) return null;
+  const prompt = buildJobParsingPrompt(rawText);
+  
+  if (!process.env.SARVAM_API_KEY) {
+    throw new Error("SARVAM_API_KEY is missing in .env");
+  }
+
+  try {
+    const response = await axios.post(
+      "https://api.sarvam.ai/v1/chat/completions",
+      {
+        model: "sarvam-105b", // Standard Sarvam model
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "api-subscription-key": process.env.SARVAM_API_KEY,
+        },
+      }
+    );
+
+    let content = response.data.choices[0].message.content;
+    // Clean potential markdown formatting
+    content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    const result = JSON.parse(content);
+
+    return {
+      companyName: result.companyName || "Unknown Company",
+      skillsRequired: Array.isArray(result.skillsRequired) ? result.skillsRequired : [],
+      contactEmail: result.contactEmail || null,
+      contactPhone: result.contactPhone || null,
+      workMode: ["Remote", "Hybrid", "Onsite", "Unknown"].includes(result.workMode)
+        ? result.workMode
+        : "Unknown",
+    };
+  } catch (error) {
+    console.error("Error calling Sarvam API:", error.response?.data || error.message);
+    throw new Error("Failed to parse job post using Sarvam API");
+  }
+};
+
+module.exports = {
+  parseJobPost,
+};
