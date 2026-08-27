@@ -2,25 +2,10 @@ const axios = require("axios");
 
 const buildJobParsingPrompt = (rawText) => {
   return `
-You are an expert HR assistant and data extractor.
-Analyze the following raw text which contains one or more job postings or recruitment messages.
-Extract the relevant details and return them as a strict JSON object.
-
-Required output shape:
-{
-  "companyName": "string or 'Unknown Company' if not found",
-  "skillsRequired": ["string", "string"],
-  "contactEmail": "string or null if not found",
-  "contactPhone": "string or null if not found",
-  "workMode": "Remote" | "Hybrid" | "Onsite" | "Unknown"
-}
-
-Rules:
-- Be as accurate as possible. Look for email patterns and phone number patterns.
-- If multiple jobs are present, just extract the primary one or combine the most prominent contact details and skills.
-- Only output valid JSON. Do not wrap in Markdown fences.
-
-Raw Text:
+Extract job details into strict JSON:
+{"companyName":"str/'Unknown Company'","skillsRequired":["str"],"contactEmail":"str/null","contactPhone":"str/null","workMode":"Remote|Hybrid|Onsite|Unknown"}
+Rules: Primary job only. Return ONLY valid JSON, NO markdown.
+Text:
 ${rawText}
 `.trim();
 };
