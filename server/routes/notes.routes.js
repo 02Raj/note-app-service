@@ -4,7 +4,7 @@ const authenticate = require("../middlewares/auth.middleware");
 
 const {
   create,
-  getAll,
+  getAll, getById,
   getByTopic,
   getBySubtopic,
   remove,
@@ -13,7 +13,8 @@ const {
 
 router.post("/", authenticate, create);
 router.put("/:id", authenticate, update); 
-router.get("/", authenticate, getAll);
+router.get('/', authenticate, getAll);
+router.get('/:id', authenticate, getById);
 router.get("/topic/:topicId", authenticate, getByTopic);
 router.get("/subtopic/:subtopicId", authenticate, getBySubtopic);
 router.delete("/:id", authenticate, remove);
