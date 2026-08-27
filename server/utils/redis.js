@@ -9,19 +9,19 @@ const redisClient = redis.createClient({
 
 let isRedisConnected = false;
 
-redisClient.on("error", (err) => {
-  console.error("❌ Redis Client Error", err);
-  isRedisConnected = false;
-});
+// redisClient.on("error", (err) => {
+//   console.error("❌ Redis Client Error", err);
+//   isRedisConnected = false;
+// });
 
-redisClient.on("connect", () => {
-  console.log("✅ Redis Client Connected");
-  isRedisConnected = true;
-});
+// redisClient.on("connect", () => {
+//   console.log("✅ Redis Client Connected");
+//   isRedisConnected = true;
+// });
 
-redisClient.connect().catch(err => {
-  console.error("❌ Failed to connect to Redis on startup:", err);
-});
+// redisClient.connect().catch(err => {
+//   console.error("❌ Failed to connect to Redis on startup:", err);
+// });
 
 module.exports = {
   redisClient,
